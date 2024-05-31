@@ -11,11 +11,10 @@ import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pro.sky.animal_shelter.entity.Pass;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 
@@ -32,6 +31,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.setUpdatesListener(this);
     }
 
+    private Map<String, ConversationState> userStates = new HashMap<>();
+    private Map<String, Pass> userPasses = new HashMap<>();
+
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
@@ -39,22 +41,83 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             if (update.message() != null && update.message().text() != null) {
                 String chatId = update.message().chat().id().toString();
                 String text = update.message().text();
-                switch (text) {
-                    case "/start":
-                        SendMessage welcomeMessage = new SendMessage(chatId,WELCOME_MESSAGE);
-                        welcomeMessage.replyMarkup(createKeyboard());
-                        SendResponse welcomeMessageResponse = telegramBot.execute(welcomeMessage);
+                if (text.equals("/start")) {
+                    SendMessage welcomeMessage = new SendMessage(chatId, WELCOME_MESSAGE);
+                    welcomeMessage.replyMarkup(createKeyboard());
+                    SendResponse welcomeMessageResponse = telegramBot.execute(welcomeMessage);
+                } else if (text.equals("История приюта")) {
+                    SendMessage shelterHistory = new SendMessage(chatId, SHELTER_HISTORY);
+                    shelterHistory.replyMarkup(createKeyboard());
+                    SendResponse shelterHistoryResponse = telegramBot.execute(shelterHistory);
+                } else if (text.equals("Расписание работы")) {
+                    SendMessage workTableMessage = new SendMessage(chatId, TABLE_MESSAGE);
+                    workTableMessage.replyMarkup(createKeyboard());
+                    SendResponse workTabkeResponse = telegramBot.execute(workTableMessage);
+                } else if (text.equals("Схема проезда")) {
+                    SendMessage direction = new SendMessage(chatId, DIRECTION_MESSAGE);
+                    direction.replyMarkup(createKeyboard());
+                    SendResponse directionResponse = telegramBot.execute(direction);
+                } else if (text.equals("Оформить пропуск")) {
+                    SendMessage passMessage = new SendMessage(chatId, PASS_MESSAGE);
+                    passMessage.replyMarkup(createKeyboardForPass());
+                    SendResponse passMessageResponse = telegramBot.execute(passMessage);
+                }
+                switch (getUserState(chatId)) {
+                    case WAITING_FOR_FULL_NAME:
+                        handleFullName(chatId, text);
                         break;
-                    case "История приюта":
-                        SendMessage shelterHistory = new SendMessage(chatId,SHELTER_HISTORY);
-                        shelterHistory.replyMarkup(createKeyboard());
-                        SendResponse shelterHistoryResponse = telegramBot.execute(shelterHistory);
+                    case WAITING_FOR_DATE_OF_BIRTH:
+                        handleDateOfBirth(chatId, text);
+                        break;
+                    case WAITING_FOR_PHONE_NUMBER:
+                        handlePhoneNumber(chatId, text);
+                        break;
                 }
 
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+    private ConversationState getUserState(String chatId) {
+        return userStates.getOrDefault(chatId, ConversationState.NONE);
+    }
+
+    private void handleFullName(String chatId, String text) {
+        Pass pass = new Pass();
+        pass.setFullName(text);
+        userPasses.put(chatId, pass);
+
+        SendMessage dateOfBirthMessage = new SendMessage(chatId, DATE_OF_BIRTH_MESSAGE);
+        telegramBot.execute(dateOfBirthMessage);
+
+        userStates.put(chatId, ConversationState.WAITING_FOR_DATE_OF_BIRTH);
+    }
+
+    private void handleDateOfBirth(String chatId, String text) {
+        Pass pass = userPasses.get(chatId);
+        pass.setDateOfBirth(text);
+
+        SendMessage phoneNumberMessage = new SendMessage(chatId, );
+        telegramBot.execute(phoneNumberMessage);
+
+        userStates.put(chatId, ConversationState.WAITING_FOR_PHONE_NUMBER);
+    }
+
+    private void handlePhoneNumber(String chatId, String text) {
+        Pass pass = userPasses.get(chatId);
+        pass.setPhoneNumber(text);
+
+        // Сохранение пропуска или дальнейшая логика
+        // savePass(pass);
+
+        SendMessage confirmationMessage = new SendMessage(chatId, "Ваш пропуск успешно оформлен.");
+        telegramBot.execute(confirmationMessage);
+
+        userStates.put(chatId, ConversationState.NONE);
+    }
+
+
+
     private ReplyKeyboardMarkup createKeyboard() {
         KeyboardButton button1 = new KeyboardButton("История приюта");
         KeyboardButton button2 = new KeyboardButton("Расписание работы");
@@ -62,15 +125,32 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         KeyboardButton button4 = new KeyboardButton("Оформить пропуск");
         KeyboardButton button5 = new KeyboardButton("Техника безопасности");
         KeyboardButton button6 = new KeyboardButton("Оставить контакты для связи");
-        KeyboardButton button7 = new KeyboardButton("Назад");
 
         KeyboardButton[][] keyboardButtons = {
                 {button1, button2},
                 {button3, button4},
-                {button5, button6},
-                {button7}
+                {button5, button6}
         };
 
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
+    }
+
+    private ReplyKeyboardMarkup createKeyboardForPass() {
+        KeyboardButton button1 = new KeyboardButton("Согласен(-на)");
+        KeyboardButton button2 = new KeyboardButton("Назад");
+
+        KeyboardButton[][] keyboardButtons = {
+                {button1, button2}
+        };
+
+        return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
+    }
+
+    private ReplyKeyboardMarkup createKeyBoardBack() {
+        KeyboardButton buttonBack = new KeyboardButton("Назад");
+
+        KeyboardButton[] keyboardButton = {buttonBack};
+
+        return new ReplyKeyboardMarkup(keyboardButton).resizeKeyboard(true).oneTimeKeyboard(true);
     }
 }
