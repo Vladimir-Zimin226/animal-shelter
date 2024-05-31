@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Pass;
+import pro.sky.animal_shelter.service.TelegrambotService;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -22,6 +23,12 @@ import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private final TelegrambotService telegrambotService;
+
+
+    public TelegramBotUpdatesListener(TelegrambotService telegrambotService) {
+        this.telegrambotService = telegrambotService;
+    }
 
     @Autowired
     private TelegramBot telegramBot;
@@ -58,26 +65,43 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     direction.replyMarkup(createKeyboard());
                     SendResponse directionResponse = telegramBot.execute(direction);
                 } else if (text.equals("Оформить пропуск")) {
-                    SendMessage passMessage = new SendMessage(chatId, PASS_MESSAGE);
-                    passMessage.replyMarkup(createKeyboardForPass());
-                    SendResponse passMessageResponse = telegramBot.execute(passMessage);
+                    initiatePassProcess(chatId);
+                } else if (text.equals("Согласен(-на)")) {
+                    handleUserResponse(chatId, text);
                 }
-                switch (getUserState(chatId)) {
-                    case WAITING_FOR_FULL_NAME:
-                        handleFullName(chatId, text);
-                        break;
-                    case WAITING_FOR_DATE_OF_BIRTH:
-                        handleDateOfBirth(chatId, text);
-                        break;
-                    case WAITING_FOR_PHONE_NUMBER:
-                        handlePhoneNumber(chatId, text);
-                        break;
-                }
-
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+    private void initiatePassProcess(String chatId) {
+        SendMessage passMessage = new SendMessage(chatId, PASS_MESSAGE);
+        passMessage.replyMarkup(createKeyboardForPass());
+        telegramBot.execute(passMessage);
+        userStates.put(chatId, ConversationState.WAITING_FOR_FULL_NAME);
+    }
+
+    private void handleUserResponse(String chatId, String text) {
+        switch (getUserState(chatId)) {
+            case WAITING_FOR_FULL_NAME:
+                handleFullName(chatId, text);
+                break;
+            case WAITING_FOR_DATE_OF_BIRTH:
+                handleDateOfBirth(chatId, text);
+                break;
+            case WAITING_FOR_PHONE_NUMBER:
+                handlePhoneNumber(chatId, text);
+                break;
+            default:
+                sendUnknownCommandMessage(chatId);
+                break;
+        }
+    }
+
+    private void sendUnknownCommandMessage(String chatId) {
+        SendMessage message = new SendMessage(chatId, "Неизвестная команда. Пожалуйста, используйте клавиатуру для выбора опций.");
+        telegramBot.execute(message);
+    }
+
     private ConversationState getUserState(String chatId) {
         return userStates.getOrDefault(chatId, ConversationState.NONE);
     }
@@ -97,7 +121,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         Pass pass = userPasses.get(chatId);
         pass.setDateOfBirth(text);
 
-        SendMessage phoneNumberMessage = new SendMessage(chatId, );
+        SendMessage phoneNumberMessage = new SendMessage(chatId, PHONE_NUMBER_MESSAGE);
         telegramBot.execute(phoneNumberMessage);
 
         userStates.put(chatId, ConversationState.WAITING_FOR_PHONE_NUMBER);
@@ -107,11 +131,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         Pass pass = userPasses.get(chatId);
         pass.setPhoneNumber(text);
 
-        // Сохранение пропуска или дальнейшая логика
-        // savePass(pass);
-
         SendMessage confirmationMessage = new SendMessage(chatId, "Ваш пропуск успешно оформлен.");
         telegramBot.execute(confirmationMessage);
+
+        telegrambotService.add(pass);
 
         userStates.put(chatId, ConversationState.NONE);
     }

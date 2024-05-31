@@ -27,4 +27,5 @@ public class TelegramBotContent {
     public static final String PASS_MESSAGE = "Чтобы оформить пропуск, нам нужны будут ваши некоторые данные";
     public static final String FULL_NAME_MESSAGE = "Напиши Ф.И.О. в форме: Иванов Иван Иванович";
     public static final String DATE_OF_BIRTH_MESSAGE = "Теперь, пришлите дату рождения в формате: дд.мм.гг (23.05.2002)";
+    public static final String PHONE_NUMBER_MESSAGE = "Отправьте номер телефона в формате: +88005553535";
 }

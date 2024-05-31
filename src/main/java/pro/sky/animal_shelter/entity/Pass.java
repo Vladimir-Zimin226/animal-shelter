@@ -4,7 +4,6 @@ package pro.sky.animal_shelter.entity;
 import jakarta.persistence.*;
 
 import javax.swing.plaf.nimbus.State;
-import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -22,8 +21,6 @@ public class Pass {
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
-
-    private State state;
 
 
     public Pass() {

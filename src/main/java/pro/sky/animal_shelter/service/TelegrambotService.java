@@ -1,7 +1,7 @@
 package pro.sky.animal_shelter.service;
 
 
-import com.pengrad.telegrambot.request.SendMessage;
+
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Pass;
 import pro.sky.animal_shelter.repository.TelegrambotRepository;
