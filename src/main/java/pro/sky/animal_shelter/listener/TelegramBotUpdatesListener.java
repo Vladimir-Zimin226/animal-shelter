@@ -150,10 +150,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         logger.info("Updated state to WAITING_FOR_PHONE_NUMBER for chat {}", chatId);
     }
 
-    private ChatStateForContactInfo getUserState(String chatId) {
-        return chatStateForContactInfoMap.getOrDefault(chatId, ChatStateForContactInfo.NONE);
-    }
-
     private void handlePhoneNumber(String chatId, String text) {
         UserContact userContact = userContactMap.get(chatId);
         if (userContact == null) {
