@@ -1,6 +1,5 @@
 package pro.sky.animal_shelter.listener;
 
-import com.pengrad.telegrambot.model.User;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +7,6 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,12 +88,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("shelters", "shelter_info"));
                     techdefMessage.replyMarkup(createBackKeyboard());
                     telegramBot.execute(techdefMessage);
-                } else if (text.equals("Оставить контакты для связи")) {
-                    chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("shelters", "shelter_info"));
-                    initiatePassProcess(chatId);
-                } else if (text.equals("Согласен(-на)")) {
-                    chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("shelters", "shelter_info"));
-                    handleUserResponse(chatId, text);
                 } else if (text.equals("Назад") && chatStateForBackButtonMap.containsKey(chatId)) {
                     chatStateForBackButton = chatStateForBackButtonMap.get(chatId);
                     if (chatStateForBackButton.getPreviousMenu().equals("main_menu")) {
@@ -109,7 +101,25 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         telegramBot.execute(backMessage);
                         chatStateForBackButton.setCurrentMenu("shelter_info", "main_menu");
                     }
+                }else if (text.equals("Оставить контакты для связи")) {
+                    initiatePassProcess(chatId);
+                } else if (text.equals("Согласен(-на)") || !chatStateForContactInfoMap.get(chatId).equals(ChatStateForContactInfo.WAITING_FOR_CONFIRMATION)) {
+                    switch (chatStateForContactInfoMap.getOrDefault(chatId,ChatStateForContactInfo.NONE)) {
+                        case WAITING_FOR_CONFIRMATION:
+                            hanldeConfirmation(chatId);
+                            break;
+                        case WAITING_FOR_FULL_NAME:
+                            handleFullName(chatId, text);
+                            break;
+                        case WAITING_FOR_PHONE_NUMBER:
+                            handlePhoneNumber(chatId, text);
+                            break;
+                        default:
+                            sendUnknownCommandMessage(chatId);
+                            break;
+                    }
                 }
+
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -122,30 +132,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_CONFIRMATION);
     }
 
-    private void handleUserResponse(String chatId, String text) {
-        ChatStateForContactInfo currentState = getUserState(chatId);
-        logger.info("Current state for chat {}: {}", chatId, currentState);
-
-        switch (currentState) {
-            case WAITING_FOR_CONFIRMATION:
-                chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
-                SendMessage fullNameMessage = new SendMessage(chatId, "Тогда пришлите пожалуйста ФИО");
-                telegramBot.execute(fullNameMessage);
-                break;
-            case WAITING_FOR_FULL_NAME:
-                handleFullName(chatId, text);
-                break;
-            case WAITING_FOR_PHONE_NUMBER:
-                handlePhoneNumber(chatId, text);
-                break;
-            default:
-                sendUnknownCommandMessage(chatId);
-                break;
-        }
+    private void hanldeConfirmation(String chatId) {
+        SendMessage fullNameMessage = new SendMessage(chatId, "Тогда пришлите пожалуйста ФИО");
+        telegramBot.execute(fullNameMessage);
+        chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
     }
 
     private void handleFullName(String chatId, String text) {
-        UserContact userContact = userContactMap.getOrDefault(chatId, new UserContact());
+        UserContact userContact = new UserContact();
         userContact.setFullName(text);
         userContactMap.put(chatId, userContact);
 
@@ -154,6 +148,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_PHONE_NUMBER);
         logger.info("Updated state to WAITING_FOR_PHONE_NUMBER for chat {}", chatId);
+    }
+
+    private ChatStateForContactInfo getUserState(String chatId) {
+        return chatStateForContactInfoMap.getOrDefault(chatId, ChatStateForContactInfo.NONE);
     }
 
     private void handlePhoneNumber(String chatId, String text) {
@@ -173,9 +171,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         logger.info("Removed chat {} from chatStateForContactInfoMap and userContactMap", chatId);
     }
 
-    private ChatStateForContactInfo getUserState(String chatId) {
-        return chatStateForContactInfoMap.getOrDefault(chatId, ChatStateForContactInfo.NONE);
-    }
 
     private void sendUnknownCommandMessage(String chatId) {
         SendMessage message = new SendMessage(chatId, "Неизвестная команда. Пожалуйста, используйте клавиатуру для выбора опций.");

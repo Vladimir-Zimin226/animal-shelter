@@ -1,6 +1,6 @@
 package pro.sky.animal_shelter.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Objects;
 
 //Таблица отображает все взаимоотношения между пользователями и животными

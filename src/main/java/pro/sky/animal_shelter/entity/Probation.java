@@ -1,6 +1,6 @@
 package pro.sky.animal_shelter.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.Objects;
 

@@ -1,6 +1,7 @@
 package pro.sky.animal_shelter.entity;
 
-import javax.persistence.*;
+
+import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
@@ -9,7 +10,6 @@ public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
 
