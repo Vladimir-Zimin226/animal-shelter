@@ -51,6 +51,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 ChatStateForBackButton chatStateForBackButton;
                 chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.NONE);
                 if (text.equals("/start")) {
+                    SendPhoto welcomePhoto = new SendPhoto(chatId, WELCOME_PHOTO);
+                    telegramBot.execute(welcomePhoto);
                     SendMessage welcomeMessage = new SendMessage(chatId, WELCOME_MESSAGE);
                     telegramBot.execute(welcomeMessage);
                 } else if (text.equals("/help")) {
