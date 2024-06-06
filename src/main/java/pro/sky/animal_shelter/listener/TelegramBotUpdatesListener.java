@@ -2,6 +2,7 @@ package pro.sky.animal_shelter.listener;
 
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -16,7 +17,6 @@ import pro.sky.animal_shelter.entity.ChatStateForContactInfo;
 import pro.sky.animal_shelter.entity.UserContact;
 import pro.sky.animal_shelter.service.UserContactService;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
