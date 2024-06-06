@@ -1,4 +1,4 @@
-package pro.sky.animal_shelter.entity;
+package pro.sky.animal_shelter.listener;
 
 public enum ChatStateForContactInfo {
     NONE,

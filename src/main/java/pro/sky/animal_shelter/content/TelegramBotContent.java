@@ -15,6 +15,8 @@ public class TelegramBotContent {
 
     public static final String ADDRES = "Свердловская область, Каменский городской округ, село Черемхово, координаты на карте 56.521009, 61.793812.";
 
+    public static final String SCHEMA_SHELTER = "https://keephere.ru/get/_MzDKXreNJ9/o/photo.jpg";
+
     public static final String OPENING_HOURS = "Что такое счастье?\n" +
             "\n" +
             "Люди веками ищут ответ на этот вопрос.\n" +

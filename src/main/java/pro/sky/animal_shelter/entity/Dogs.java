@@ -16,7 +16,6 @@ public class Dogs {
 
     private Long id;
 
-
     private String name;
 
     private int age;
@@ -54,7 +53,7 @@ public class Dogs {
     }
 
     public Dogs(Long id, String name, int age, String breed, String specifics, String history,
-                boolean findCurator, boolean findOwner, boolean atHome) {
+                boolean findCurator, boolean findOwner, boolean atHome, URL imgPath) {
         this.id = id;
         this.name = name;
         this.age = age;
@@ -64,6 +63,7 @@ public class Dogs {
         this.findCurator = findCurator;
         this.findOwner = findOwner;
         this.atHome = atHome;
+        this.imgPath = imgPath;
     }
 
     public Long getId() {

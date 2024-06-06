@@ -2,6 +2,7 @@ package pro.sky.animal_shelter.listener;
 
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.SendPhoto;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.pengrad.telegrambot.TelegramBot;
@@ -12,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Service;
-import pro.sky.animal_shelter.entity.ChatStateForBackButton;
-import pro.sky.animal_shelter.entity.ChatStateForContactInfo;
 import pro.sky.animal_shelter.entity.UserContact;
 import pro.sky.animal_shelter.service.UserContactService;
 
@@ -75,6 +74,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     shelterHistoryMessage.replyMarkup(createBackKeyboard());
                     telegramBot.execute(shelterHistoryMessage);
                 } else if (text.equals("Схема проезда")) {
+                    SendPhoto shelterMapPhoto = new SendPhoto(chatId, SCHEMA_SHELTER);
+                    telegramBot.execute(shelterMapPhoto);
                     SendMessage shelterHistoryMessage = new SendMessage(chatId, ADDRES);
                     chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("shelters", "shelter_info"));
                     shelterHistoryMessage.replyMarkup(createBackKeyboard());
