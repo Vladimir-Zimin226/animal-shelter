@@ -4,6 +4,8 @@ public class TelegramBotContent {
 
     public static final String WELCOME_MESSAGE = "Добро пожаловать в нашего бота! Введите /help, чтобы узнать, что я могу.";
 
+    public static final String WELCOME_PHOTO = "https://keephere.ru/get/xMzDQofmjH8/o/photo.jpg";
+
     public static final String HISTORY = "Хаски — сила и скорость, сравниться с которой может только ветер, воплощение духа свободы, воплощение мечты." +
             "Красота ледяных глаз сыграла с ними злую шутку. Глянцевые таблоиды, сверкающие киноленты, ламповые блоги сделали этих собак пленниками минутных желаний человека." +
             "Зачастую принося домой синеглазого щенка люди не представляют и половины трудностей, с которыми им придется столкнуться, чтобы из маленького комочка выросла достойная, здоровая, социализированая собака. " +
@@ -14,6 +16,8 @@ public class TelegramBotContent {
             " поэтому помощь получают далеко не все, кто в ней нуждается.";
 
     public static final String ADDRES = "Свердловская область, Каменский городской округ, село Черемхово, координаты на карте 56.521009, 61.793812.";
+
+    public static final String SCHEMA_SHELTER = "https://keephere.ru/get/_MzDKXreNJ9/o/photo.jpg";
 
     public static final String OPENING_HOURS = "Что такое счастье?\n" +
             "\n" +

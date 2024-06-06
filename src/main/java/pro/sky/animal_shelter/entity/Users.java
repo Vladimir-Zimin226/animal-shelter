@@ -19,7 +19,7 @@ public class Users {
 
     private String phoneNumber;
 
-    private boolean isVolonter;
+    private boolean isVolunteer;
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name="relationships",
@@ -31,12 +31,12 @@ public class Users {
 
     }
 
-    public Users(Long id, String name, String telegramId, String phoneNumber, boolean isVolonter) {
+    public Users(Long id, String name, String telegramId, String phoneNumber, boolean isVolunteer) {
         this.id = id;
         this.name = name;
         this.telegramId = telegramId;
         this.phoneNumber = phoneNumber;
-        this.isVolonter = isVolonter;
+        this.isVolunteer = isVolunteer;
     }
 
     public Long getId() {
@@ -55,8 +55,8 @@ public class Users {
         return phoneNumber;
     }
 
-    public boolean isVolonter() {
-        return isVolonter;
+    public boolean isVolunteer() {
+        return isVolunteer;
     }
 
     public void setName(String name) {
@@ -71,8 +71,8 @@ public class Users {
         this.phoneNumber = phoneNumber;
     }
 
-    public void setVolonter(boolean volonter) {
-        isVolonter = volonter;
+    public void setVolunteer(boolean volunteer) {
+        isVolunteer = volunteer;
     }
 
     @Override

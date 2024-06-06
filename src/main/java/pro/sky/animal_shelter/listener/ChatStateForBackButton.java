@@ -1,6 +1,4 @@
-package pro.sky.animal_shelter.entity;
-
-import java.util.Stack;
+package pro.sky.animal_shelter.listener;
 
 public class ChatStateForBackButton {
     private String currentMenu;

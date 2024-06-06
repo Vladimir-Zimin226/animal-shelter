@@ -1,6 +1,8 @@
 package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
+
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,7 +15,6 @@ public class Dogs {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Long id;
-
 
     private String name;
 
@@ -38,7 +39,7 @@ public class Dogs {
     //Дефолтное значение false
     private boolean atHome;
 
-    private String imgPath;
+    private URL imgPath;
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name="relationships",
@@ -52,7 +53,7 @@ public class Dogs {
     }
 
     public Dogs(Long id, String name, int age, String breed, String specifics, String history,
-                boolean findCurator, boolean findOwner, boolean atHome) {
+                boolean findCurator, boolean findOwner, boolean atHome, URL imgPath) {
         this.id = id;
         this.name = name;
         this.age = age;
@@ -62,6 +63,7 @@ public class Dogs {
         this.findCurator = findCurator;
         this.findOwner = findOwner;
         this.atHome = atHome;
+        this.imgPath = imgPath;
     }
 
     public Long getId() {
@@ -100,7 +102,7 @@ public class Dogs {
         return atHome;
     }
 
-    public String getImgPath() {
+    public URL getImgPath() {
         return imgPath;
     }
 
@@ -136,7 +138,7 @@ public class Dogs {
         this.atHome = atHome;
     }
 
-    public void setImgPath(String imgPath) {
+    public void setImgPath(URL imgPath) {
         this.imgPath = imgPath;
     }
 
