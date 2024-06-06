@@ -16,7 +16,7 @@ public class DogServiceImpl implements DogService {
     }
 
     @Override
-    public Dogs createUser(Dogs dog) {
+    public Dogs createDog(Dogs dog) {
         if (dog == null) {
             throw new IllegalArgumentException("Dogs cannot be null");
         }

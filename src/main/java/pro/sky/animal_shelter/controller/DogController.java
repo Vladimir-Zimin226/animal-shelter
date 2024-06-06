@@ -41,7 +41,7 @@ public class DogController {
 
     @PostMapping("/create")
     public ResponseEntity<Dogs> createDog(@RequestBody Dogs dog) {
-        return ResponseEntity.ok(dogServiceImpl.createUser(dog));
+        return ResponseEntity.ok(dogServiceImpl.createDog(dog));
     }
 
     @Operation(summary = "Редактирование песика",
