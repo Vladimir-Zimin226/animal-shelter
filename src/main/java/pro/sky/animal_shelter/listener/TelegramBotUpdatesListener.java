@@ -50,6 +50,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 String chatId = String.valueOf(update.message().chat().id());
                 String text = update.message().text();
                 ChatStateForBackButton chatStateForBackButton;
+                chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.NONE);
                 if (text.equals("/start")) {
                     SendMessage welcomeMessage = new SendMessage(chatId, WELCOME_MESSAGE);
                     telegramBot.execute(welcomeMessage);
@@ -103,7 +104,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     }
                 }else if (text.equals("Оставить контакты для связи")) {
                     initiatePassProcess(chatId);
-                } else if (text.equals("Согласен(-на)") || !chatStateForContactInfoMap.get(chatId).equals(ChatStateForContactInfo.WAITING_FOR_CONFIRMATION)) {
+                }else if (text.equals("Согласен(-на)") || !chatStateForContactInfoMap.get(chatId).equals(ChatStateForContactInfo.WAITING_FOR_CONFIRMATION)) {
                     switch (chatStateForContactInfoMap.getOrDefault(chatId,ChatStateForContactInfo.NONE)) {
                         case WAITING_FOR_CONFIRMATION:
                             hanldeConfirmation(chatId);
