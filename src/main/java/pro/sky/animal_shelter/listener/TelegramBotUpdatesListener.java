@@ -3,7 +3,6 @@ package pro.sky.animal_shelter.listener;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendPhoto;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.UserContact;
 import pro.sky.animal_shelter.service.UserContactService;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
@@ -49,7 +49,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 String chatId = String.valueOf(update.message().chat().id());
                 String text = update.message().text();
                 ChatStateForBackButton chatStateForBackButton;
-                chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.NONE);
                 if (text.equals("/start")) {
                     SendPhoto welcomePhoto = new SendPhoto(chatId, WELCOME_PHOTO);
                     telegramBot.execute(welcomePhoto);
@@ -147,7 +146,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         userContact.setFullName(text);
         userContactMap.put(chatId, userContact);
 
-        SendMessage phoneNumberMessage = new SendMessage(chatId, "Пришлите номер телефона, в формате: +79**********");
+        SendMessage phoneNumberMessage = new SendMessage(chatId, "Пришлите номер телефона, в формате: +74953500505");
         telegramBot.execute(phoneNumberMessage);
 
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_PHONE_NUMBER);
@@ -156,14 +155,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private void handlePhoneNumber(String chatId, String text) {
         UserContact userContact = userContactMap.get(chatId);
-        if (userContact == null) {
-            sendUnknownCommandMessage(chatId);
-            return;
+        if (text.matches("^\\+7\\d{10}$") && userContact != null) {
+            userContact.setPhoneNumber(text);
+            SendMessage confirmationMessage = new SendMessage(chatId, "Благодарим, мы с вами свяжемся.");
+            telegramBot.execute(confirmationMessage);
+        } else {
+            throw new RuntimeException("Введён некорретный номер телефона, попробуйте снова!");
         }
-        userContact.setPhoneNumber(text);
 
-        SendMessage confirmationMessage = new SendMessage(chatId, "Благодарим, мы с вами свяжемся.");
-        telegramBot.execute(confirmationMessage);
+
+
 
         userContactService.add(userContact);
         chatStateForContactInfoMap.remove(chatId);
