@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.animal_shelter.entity.Users;
-import pro.sky.animal_shelter.service.UserServiceImpl;
+import pro.sky.animal_shelter.service.UserSrvice;
 
 import java.util.List;
 
@@ -24,10 +24,10 @@ import java.util.List;
 @RestController
 public class UserController {
 
-    private final UserServiceImpl userServiceImpl;
+    private final UserSrvice userService;
 
-    public UserController(UserServiceImpl userServiceImpl) {
-        this.userServiceImpl = userServiceImpl;
+    public UserController(UserSrvice userService) {
+        this.userService = userService;
     }
 
     @Operation(summary = "Создание пользователя",
@@ -42,7 +42,7 @@ public class UserController {
 
     @PostMapping("/create")
     public ResponseEntity<Users> createUser(@RequestBody Users user) {
-        return ResponseEntity.ok(userServiceImpl.createUser(user));
+        return ResponseEntity.ok(userService.createUser(user));
     }
 
     @Operation(summary = "Редактирование пользователя",
@@ -56,7 +56,7 @@ public class UserController {
     )
     @PutMapping("/update/{userId}")
     public ResponseEntity<Users> editUser(@PathVariable long userId, @RequestBody Users user) {
-        Users updatedUser = userServiceImpl.updateUser(userId, user);
+        Users updatedUser = userService.updateUser(userId, user);
         if (updatedUser == null) {
             return ResponseEntity.notFound().build();
         }
@@ -76,7 +76,7 @@ public class UserController {
             })
     @GetMapping("/all_volunteer")
     public ResponseEntity<List<Users>> getAllVolunteers() {
-        return ResponseEntity.ok(userServiceImpl.getAllVolunteer());
+        return ResponseEntity.ok(userService.getAllVolunteer());
     }
 
     @Operation(summary = "Получаем всех пользователей из базы данных",
@@ -92,7 +92,7 @@ public class UserController {
             })
     @GetMapping("/all")
     public ResponseEntity<List<Users>> getAllUsers() {
-        return ResponseEntity.ok(userServiceImpl.getAllUsers());
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
 
@@ -109,7 +109,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long userId) {
-        userServiceImpl.deleteUserById(userId);
+        userService.deleteUserById(userId);
         return ResponseEntity.ok().build();
     }
 }
