@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.animal_shelter.entity.Users;
-import pro.sky.animal_shelter.service.UserSrvice;
+import pro.sky.animal_shelter.service.services.UserService;
 
 import java.util.List;
 
@@ -24,9 +24,9 @@ import java.util.List;
 @RestController
 public class UserController {
 
-    private final UserSrvice userService;
+    private final UserService userService;
 
-    public UserController(UserSrvice userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
