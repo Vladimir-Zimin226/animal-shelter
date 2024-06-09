@@ -1,4 +1,4 @@
-package pro.sky.animal_shelter.service;
+package pro.sky.animal_shelter.service.services;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import pro.sky.animal_shelter.entity.Dogs;
@@ -6,7 +6,7 @@ import pro.sky.animal_shelter.entity.Users;
 
 import java.util.List;
 
-public interface UserSrvice {
+public interface UserService {
 
     /**
      * Создание нового пользователя и сохранение его в базу данных <br>
