@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.animal_shelter.entity.Dogs;
-import pro.sky.animal_shelter.service.implementations.DogServiceImpl;
+import pro.sky.animal_shelter.service.services.DogService;
 
 import java.util.List;
 
@@ -23,10 +23,10 @@ import java.util.List;
 @RestController
 public class DogController {
 
-    private final DogServiceImpl dogServiceImpl;
+    private final DogService dogService;
 
-    public DogController(DogServiceImpl dogServiceImpl) {
-        this.dogServiceImpl = dogServiceImpl;
+    public DogController(DogService dogService) {
+        this.dogService = dogService;
     }
 
     @Operation(summary = "Создание песика",
@@ -41,7 +41,7 @@ public class DogController {
 
     @PostMapping("/create")
     public ResponseEntity<Dogs> createDog(@RequestBody Dogs dog) {
-        return ResponseEntity.ok(dogServiceImpl.createDog(dog));
+        return ResponseEntity.ok(dogService.createDog(dog));
     }
 
     @Operation(summary = "Редактирование песика",
@@ -55,7 +55,7 @@ public class DogController {
     )
     @PutMapping("/update/{dogId}")
     public ResponseEntity<Dogs> editDog(@PathVariable long dogId, @RequestBody Dogs dog) {
-        Dogs updatedDog = dogServiceImpl.updateDog(dogId, dog);
+        Dogs updatedDog = dogService.updateDog(dogId, dog);
         if (updatedDog == null) {
             return ResponseEntity.notFound().build();
         }
@@ -75,7 +75,7 @@ public class DogController {
             })
     @GetMapping("/all")
     public ResponseEntity<List<Dogs>> getAllDogs() {
-        return ResponseEntity.ok(dogServiceImpl.getAllDogs());
+        return ResponseEntity.ok(dogService.getAllDogs());
     }
 
     @Operation(summary = "Удаляем песика из базы данных",
@@ -91,7 +91,7 @@ public class DogController {
 
     @DeleteMapping("/{dogId}")
     public ResponseEntity<Void> deleteDogById(@PathVariable Long dogId) {
-        dogServiceImpl.deleteDogById(dogId);
+        dogService.deleteDogById(dogId);
         return ResponseEntity.ok().build();
     }
 
@@ -108,7 +108,7 @@ public class DogController {
             })
     @GetMapping("/all_dogs_who_need_owner")
     public ResponseEntity<List<Dogs>> getAllDogsWhoNeededOwner() {
-        return ResponseEntity.ok(dogServiceImpl.getAllWhoNeededOwner());
+        return ResponseEntity.ok(dogService.getAllWhoNeededOwner());
     }
 
     @Operation(summary = "Получаем всех песиков из базы данных, которые ищут спонсора",
@@ -124,7 +124,7 @@ public class DogController {
             })
     @GetMapping("/all_dogs_who_need_curator")
     public ResponseEntity<List<Dogs>> getAllDogsWhoNeededCurator() {
-        return ResponseEntity.ok(dogServiceImpl.getAllWhoNeededCurator());
+        return ResponseEntity.ok(dogService.getAllWhoNeededCurator());
     }
 
     @Operation(summary = "Получаем всех песиков из базы данных, которые нащли дом",
@@ -140,7 +140,7 @@ public class DogController {
             })
     @GetMapping("/all_dogs_who_found_home")
     public ResponseEntity<List<Dogs>> getAllDogsWhoFoundHome() {
-        return ResponseEntity.ok(dogServiceImpl.getAllWhoFoundHome());
+        return ResponseEntity.ok(dogService.getAllWhoFoundHome());
     }
 
 }
