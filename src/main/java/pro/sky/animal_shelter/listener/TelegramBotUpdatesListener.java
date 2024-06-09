@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Service;
-import pro.sky.animal_shelter.entity.UserContact;
-import pro.sky.animal_shelter.service.UserContactService;
+import pro.sky.animal_shelter.chatStates.ChatStateForBackButton;
+import pro.sky.animal_shelter.chatStates.ChatStateForContactInfo;
+import pro.sky.animal_shelter.entity.Users;
+import pro.sky.animal_shelter.service.services.UserService;
 
 import java.util.*;
 
@@ -23,15 +25,15 @@ import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-    private final UserContactService userContactService;
+    private final UserService userService;
 
-    public TelegramBotUpdatesListener(UserContactService userContactService) {
-        this.userContactService = userContactService;
+    public TelegramBotUpdatesListener(UserService userService) {
+        this.userService = userService;
     }
 
     Map<String, ChatStateForBackButton> chatStateForBackButtonMap = new HashMap<>();
     Map<String, ChatStateForContactInfo> chatStateForContactInfoMap = new HashMap<>();
-    Map<String, UserContact> userContactMap = new HashMap<>();
+    Map<String, Users> userContactMap = new HashMap<>();
 
     @Autowired
     private TelegramBot telegramBot;
@@ -48,8 +50,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             if (update.message() != null && update.message().text() != null) {
                 String chatId = String.valueOf(update.message().chat().id());
                 String text = update.message().text();
+                String telegramId = String.valueOf(update.message().from().id());
                 ChatStateForBackButton chatStateForBackButton;
-                chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.NONE);
                 if (text.equals("/start")) {
                     SendPhoto welcomePhoto = new SendPhoto(chatId, WELCOME_PHOTO);
                     telegramBot.execute(welcomePhoto);
@@ -113,7 +115,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             hanldeConfirmation(chatId);
                             break;
                         case WAITING_FOR_FULL_NAME:
-                            handleFullName(chatId, text);
+                            handleFullName(chatId, text, telegramId);
                             break;
                         case WAITING_FOR_PHONE_NUMBER:
                             handlePhoneNumber(chatId, text);
@@ -142,12 +144,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
     }
 
-    private void handleFullName(String chatId, String text) {
-        UserContact userContact = new UserContact();
-        userContact.setFullName(text);
-        userContactMap.put(chatId, userContact);
+    private void handleFullName(String chatId, String text, String telegramId) {
+        Users user = new Users();
+        user.setName(text);
+        user.setTelegramId(telegramId);
+        user.setVolunteer(false);
+        userContactMap.put(chatId, user);
 
-        SendMessage phoneNumberMessage = new SendMessage(chatId, "Пришлите номер телефона, в формате: +79**********");
+        SendMessage phoneNumberMessage = new SendMessage(chatId, "Пришлите номер телефона, в формате: +74953500505");
         telegramBot.execute(phoneNumberMessage);
 
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_PHONE_NUMBER);
@@ -155,17 +159,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     private void handlePhoneNumber(String chatId, String text) {
-        UserContact userContact = userContactMap.get(chatId);
-        if (userContact == null) {
-            sendUnknownCommandMessage(chatId);
-            return;
+        Users user = userContactMap.get(chatId);
+        if (text.matches("^\\+7\\d{10}$") && user != null) {
+            user.setPhoneNumber(text);
+            SendMessage confirmationMessage = new SendMessage(chatId, "Благодарим, мы с вами свяжемся.");
+            telegramBot.execute(confirmationMessage);
+        } else {
+            throw new RuntimeException("Введён некорретный номер телефона, попробуйте снова!");
         }
-        userContact.setPhoneNumber(text);
 
-        SendMessage confirmationMessage = new SendMessage(chatId, "Благодарим, мы с вами свяжемся.");
-        telegramBot.execute(confirmationMessage);
 
-        userContactService.add(userContact);
+
+
+        userService.createUser(user);
         chatStateForContactInfoMap.remove(chatId);
         userContactMap.remove(chatId);
         logger.info("Removed chat {} from chatStateForContactInfoMap and userContactMap", chatId);
