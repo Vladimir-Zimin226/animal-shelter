@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.animal_shelter.entity.Dogs;
-import pro.sky.animal_shelter.service.DogServiceImpl;
+import pro.sky.animal_shelter.service.implementations.DogServiceImpl;
 
 import java.util.List;
 

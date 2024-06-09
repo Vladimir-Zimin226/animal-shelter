@@ -1,8 +1,9 @@
-package pro.sky.animal_shelter.service;
+package pro.sky.animal_shelter.service.implementations;
 
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Dogs;
 import pro.sky.animal_shelter.repository.DogsRepository;
+import pro.sky.animal_shelter.service.services.DogService;
 
 import java.util.List;
 
