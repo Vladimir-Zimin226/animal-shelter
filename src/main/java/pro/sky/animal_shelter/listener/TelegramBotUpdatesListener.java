@@ -5,6 +5,7 @@ import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendPhoto;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pro.sky.animal_shelter.chatStates.ChatStateForBackButton;
 import pro.sky.animal_shelter.chatStates.ChatStateForContactInfo;
+import pro.sky.animal_shelter.entity.Dogs;
 import pro.sky.animal_shelter.entity.Users;
 import pro.sky.animal_shelter.service.services.UserService;
 
@@ -23,9 +25,6 @@ import java.util.Map;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 
-/**
- * Service to handle Telegram Bot updates.
- */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
@@ -70,6 +69,36 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             case "/help":
                 sendHelpMessage(chatId);
                 break;
+            case "Как взять животное из приюта":
+                sendMessageHowToTakeAPet(chatId);
+                break;
+            case "Правила знакомства с животным до того, как забрать его из приюта":
+                sendPreAdoptionRules(chatId);
+                break;
+            case "Список документов для усыновления":
+                sendAdoptionDocumentsList(chatId);
+                break;
+            case "Рекомендации по транспортировке":
+                sendTransportRecommendations(chatId);
+                break;
+            case "Обустройство дома для щенка":
+                sendPuppySetupRecommendations(chatId);
+                break;
+            case "Обустройство дома для взрослого животного":
+                sendAdultAnimalSetupRecommendations(chatId);
+                break;
+            case "Обустройство дома для животного с ограниченными возможностями":
+                sendSpecialNeedsAnimalSetupRecommendations(chatId);
+                break;
+            case "Советы кинолога по первичному общению с собакой":
+                sendCynologistTips(chatId);
+                break;
+            case "Рекомендации по проверенным кинологам":
+                sendCynologistRecommendations(chatId);
+                break;
+            case "Причины отказа в усыновлении":
+                sendAdoptionRejectionReasons(chatId);
+                break;
             case "Узнать информацию о приюте":
                 sendShelterInfoMenu(chatId);
                 break;
@@ -100,6 +129,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+
+    /**
+     * Методы по работе с отправкой приветсвующих и информациюонных сообщений
+     */
+
     private void sendWelcomeMessage(String chatId) {
         logger.info("Sending welcome message to chat {}", chatId);
         telegramBot.execute(new SendPhoto(chatId, WELCOME_PHOTO));
@@ -114,6 +148,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.execute(message);
     }
 
+
+    /**
+     * Методы по работе с кнопкой "Узнать информацию о приюте" и вытекающими из неё кнопками
+     */
     private void sendShelterInfoMenu(String chatId) {
         logger.info("Sending shelter info menu to chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Что вы хотели бы узнать?");
@@ -161,42 +199,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("shelters", "shelter_info"));
         message.replyMarkup(createBackKeyboard());
         telegramBot.execute(message);
-    }
-
-    private void handleBackButton(String chatId) {
-        logger.info("Handling back button for chat {}", chatId);
-        ChatStateForBackButton state = chatStateForBackButtonMap.get(chatId);
-        if (state != null) {
-            switch (state.getPreviousMenu()) {
-                case "main_menu":
-                    sendBackToMainMenu(chatId, state);
-                    break;
-                case "shelter_info":
-                    sendBackToShelterInfo(chatId, state);
-                    break;
-                default:
-                    logger.warn("Unknown previous menu: {}", state.getPreviousMenu());
-                    sendUnknownCommandMessage(chatId);
-                    break;
-            }
-        } else {
-            logger.warn("No state found for chat {}", chatId);
-            sendUnknownCommandMessage(chatId);
-        }
-    }
-
-    private void sendBackToMainMenu(String chatId, ChatStateForBackButton state) {
-        SendMessage message = new SendMessage(chatId, "Возвращаемся");
-        message.replyMarkup(createKeyBoardForStart());
-        telegramBot.execute(message);
-        state.setCurrentMenu("main_menu", "null");
-    }
-
-    private void sendBackToShelterInfo(String chatId, ChatStateForBackButton state) {
-        SendMessage message = new SendMessage(chatId, "Возвращаемся");
-        message.replyMarkup(createKeyboardForShelterInfo());
-        telegramBot.execute(message);
-        state.setCurrentMenu("shelter_info", "main_menu");
     }
 
     private void initiateContactInfoProcess(String chatId) {
@@ -269,11 +271,152 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         logger.info("Cleared contact info state for chat {}", chatId);
     }
 
+
+    /**
+     * Методы по работе с кнопкой "Как взять животное из приюта" и вытекающими из неё кнопками
+     */
+
+    private void sendMessageHowToTakeAPet(String chatId) {
+        logger.info("Sending information about how to take a pet {}", chatId);
+        SendMessage message = new SendMessage(chatId, "Нажмите на кнопку, чтобы мы поняли, что конкретно вы хотели бы узнать");
+        message.replyMarkup(createKeyboardToKnowHowToTakeAPet());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("hot_to_take_a_pet_main", "main_menu"));
+        telegramBot.execute(message);
+    }
+
+    private void sendPreAdoptionRules(String chatId) {
+        logger.info("Sending pre-adoption rules to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, PRE_ADOPTION_RULES);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendAdoptionDocumentsList(String chatId) {
+        logger.info("Sending adoption documents list to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, ADOPTION_DOCUMENTS_LIST);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendTransportRecommendations(String chatId) {
+        logger.info("Sending transport recommendations to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, TRANSPORT_RECOMMENDATIONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendPuppySetupRecommendations(String chatId) {
+        logger.info("Sending puppy setup recommendations to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, PUPPY_SETUP_RECOMMENDATIONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendAdultAnimalSetupRecommendations(String chatId) {
+        logger.info("Sending adult animal setup recommendations to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, ADULT_ANIMAL_SETUP_RECOMMENDATIONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendSpecialNeedsAnimalSetupRecommendations(String chatId) {
+        logger.info("Sending special needs animal setup recommendations to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, SPECIAL_NEEDS_ANIMAL_SETUP_RECOMMENDATIONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendCynologistTips(String chatId) {
+        logger.info("Sending cynologist tips to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, CYNOLOGIST_TIPS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendCynologistRecommendations(String chatId) {
+        logger.info("Sending cynologist recommendations to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, CYNOLOGIST_RECOMMENDATIONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+    private void sendAdoptionRejectionReasons(String chatId) {
+        logger.info("Sending adoption rejection reasons to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, ADOPTION_REJECTION_REASONS);
+        message.replyMarkup(createBackKeyboard());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("how_to_take_a_pet", "hot_to_take_a_pet_main"));
+        telegramBot.execute(message);
+    }
+
+
+    /**
+     * Методы по работе с кнопкой "Назад" и вытекающими из неё кнопками
+     */
+
+    private void handleBackButton(String chatId) {
+        logger.info("Handling back button for chat {}", chatId);
+        ChatStateForBackButton state = chatStateForBackButtonMap.get(chatId);
+        if (state != null) {
+            switch (state.getPreviousMenu()) {
+                case "main_menu":
+                    sendBackToMainMenu(chatId, state);
+                    break;
+                case "shelter_info":
+                    sendBackToShelterInfo(chatId, state);
+                    break;
+                case "hot_to_take_a_pet_main":
+                    sendBackToHowToTakeAPet(chatId, state);
+                    break;
+                default:
+                    logger.warn("Unknown previous menu: {}", state.getPreviousMenu());
+                    sendUnknownCommandMessage(chatId);
+                    break;
+            }
+        } else {
+            logger.warn("No state found for chat {}", chatId);
+            sendUnknownCommandMessage(chatId);
+        }
+    }
+
+    private void sendBackToMainMenu(String chatId, ChatStateForBackButton state) {
+        SendMessage message = new SendMessage(chatId, "Возвращаемся");
+        message.replyMarkup(createKeyBoardForStart());
+        telegramBot.execute(message);
+        state.setCurrentMenu("main_menu", "null");
+    }
+
+    private void sendBackToShelterInfo(String chatId, ChatStateForBackButton state) {
+        SendMessage message = new SendMessage(chatId, "Возвращаемся");
+        message.replyMarkup(createKeyboardToKnowHowToTakeAPet());
+        telegramBot.execute(message);
+        state.setCurrentMenu("shelter_info", "main_menu");
+    }
+
+    private void sendBackToHowToTakeAPet(String chatId, ChatStateForBackButton state) {
+        SendMessage message = new SendMessage(chatId, "Возвращаемся");
+        message.replyMarkup(createKeyboardToKnowHowToTakeAPet());
+        telegramBot.execute(message);
+        state.setCurrentMenu("hot_to_take_a_pet_main", "main_menu");
+    }
+
     private void sendUnknownCommandMessage(String chatId) {
         logger.warn("Unknown command received for chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Неизвестная команда. Пожалуйста, используйте клавиатуру для выбора опций.");
         telegramBot.execute(message);
     }
+
+
+    /**
+     * Методы по созданию кнопок
+     */
 
     private ReplyKeyboardMarkup createKeyBoardForStart() {
         KeyboardButton button1 = new KeyboardButton("Узнать информацию о приюте");
@@ -307,6 +450,29 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
 
+    private ReplyKeyboardMarkup createKeyboardToKnowHowToTakeAPet() {
+        KeyboardButton button1 = new KeyboardButton("Правила знакомства с животным до того, как забрать его из приюта");
+        KeyboardButton button2 = new KeyboardButton("Список документов для усыновления");
+        KeyboardButton button3 = new KeyboardButton("Рекомендации по транспортировке");
+        KeyboardButton button4 = new KeyboardButton("Обустройство дома для щенка");
+        KeyboardButton button5 = new KeyboardButton("Обустройство дома для взрослого животного");
+        KeyboardButton button6 = new KeyboardButton("Обустройство дома для животного с ограниченными возможностями");
+        KeyboardButton button7 = new KeyboardButton("Советы кинолога по первичному общению с собакой");
+        KeyboardButton button8 = new KeyboardButton("Рекомендации по проверенным кинологам");
+        KeyboardButton button9 = new KeyboardButton("Причины отказа в усыновлении");
+        KeyboardButton button10 = new KeyboardButton("Назад");
+
+        KeyboardButton[][] keyboardButtons = {
+                {button1, button2},
+                {button3, button4},
+                {button5, button6},
+                {button7, button8},
+                {button9, button10},
+        };
+
+        return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
+    }
+
     private ReplyKeyboardMarkup createKeyboardForContactInfo() {
         KeyboardButton button1 = new KeyboardButton("Согласен(-на)");
         KeyboardButton button2 = new KeyboardButton("Назад");
@@ -323,4 +489,5 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         KeyboardButton[] keyboardButtons = {button};
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
+
 }

@@ -4,9 +4,11 @@ public class ChatStateForBackButton {
     private String currentMenu;
     private String previousMenu;
 
+    public ChatStateForBackButton() {
+    }
 
-    public ChatStateForBackButton(String currentStep,String previousMenu) {
-        this.currentMenu = currentStep;
+    public ChatStateForBackButton(String currentMenu, String previousMenu) {
+        this.currentMenu = currentMenu;
         this.previousMenu = previousMenu;
     }
 
