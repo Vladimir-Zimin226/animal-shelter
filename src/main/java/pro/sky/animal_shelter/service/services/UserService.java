@@ -45,4 +45,7 @@ public interface UserService {
      * @return найденный список объектов класса {@link Dogs}
      */
     List<Users> getAllVolunteer();
+
+
+    Users findUserByTelegramId(String telegramId);
 }

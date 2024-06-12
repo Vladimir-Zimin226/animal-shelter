@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
         return usersRepository.save(updatedUser);
     }
 
+
     @Override
     public List<Users> getAllUsers() {
         return usersRepository.findAll();
@@ -51,5 +52,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Users> getAllVolunteer() {
         return usersRepository.findUsersByIsVolunteerIsTrue();
+    }
+
+    @Override
+    public Users findUserByTelegramId(String telegramId) {
+        return usersRepository.findUserByTelegramId(telegramId);
     }
 }
