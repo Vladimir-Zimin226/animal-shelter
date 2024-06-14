@@ -27,9 +27,7 @@ public class Users {
             inverseJoinColumns= @JoinColumn(name="dog_id", referencedColumnName="id") )
     private List<Dogs> dogs = new ArrayList<Dogs>();
 
-    public Users() {
-
-    }
+    public Users() {}
 
     public Users(Long id, String name, String telegramId, String phoneNumber, boolean isVolunteer) {
         this.id = id;
