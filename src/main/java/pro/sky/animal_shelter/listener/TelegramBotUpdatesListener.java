@@ -23,6 +23,9 @@ import java.util.Map;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 
+/**
+ * Класс TelegramBotUpdatesListener обрабатывает обновления от Telegram и взаимодействует с пользователями.
+ */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
@@ -45,6 +48,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.setUpdatesListener(this);
     }
 
+    /**
+     * Обработка списка обновлений.
+     *
+     * @param updates Список обновлений.
+     * @return Код подтверждения обработки всех обновлений.
+     */
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
@@ -60,6 +69,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
+    /**
+     * Обработка кнопок с обновлениями.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Текст сообщения.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void handleUpdate(String chatId, String text, String telegramId) {
         switch (text) {
             case "/start":
@@ -131,6 +147,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Обработка сообщений по умолчанию.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Текст сообщения.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void handleDefault(String chatId, String text, String telegramId) {
         ChatStateForContactInfo state = chatStateForContactInfoMap.get(chatId);
         if (state != null) {
@@ -150,12 +173,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Отправка приветственного сообщения.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendWelcomeMessage(String chatId) {
         logger.info("Sending welcome message to chat {}", chatId);
         telegramBot.execute(new SendPhoto(chatId, WELCOME_PHOTO));
         telegramBot.execute(new SendMessage(chatId, WELCOME_MESSAGE));
     }
 
+    /**
+     * Отправка сообщения с основыми функциями.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendHelpMessage(String chatId) {
         logger.info("Sending help message to chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Я являюсь ботом приюта Счастье В Дом. Нажмите на кнопку ниже, чтобы узнать о нашей компании больше");
@@ -164,50 +197,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.execute(message);
     }
 
-    private void initiateVolunteerHelp(String chatId) {
-        logger.info("Initiating volunteer help for chat {}", chatId);
-        SendMessage message = new SendMessage(chatId, "Отправьте пожалуйста номер телефона (в формате: +74953500505), который привязан к вашему Telegram. Убедитесь в настройках конфиденциальности в том, что вас можно найти по номеру телефона.");
-        telegramBot.execute(message);
-        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("volunteer_help", "main_menu"));
-        message.replyMarkup(createBackKeyboard());
-        chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.DROP);
-    }
-
-    private void gotPhoneNumber(String chatId, String telegramId, String text) {
-        if (isValidPhoneNumber(text)) {
-            logger.info("Received valid phone number from chat {}", chatId);
-            sendVolunteerConfirmation(chatId, telegramId, text);
-        } else {
-            logger.warn("Received invalid phone number from chat {}", chatId);
-            sendInvalidPhoneNumberMessage(chatId);
-        }
-    }
-
-    private boolean isValidPhoneNumber(String text) {
-        return text != null && text.trim().matches("^\\+7\\d{10}$");
-    }
-
-    private void sendVolunteerConfirmation(String chatId, String telegramId, String text) {
-        SendMessage message = new SendMessage(chatId, "Благодарим, волонтёр свяжется с вами в ближайшее время");
-        telegramBot.execute(message);
-        message.replyMarkup(createBackKeyboard());
-        askVolunteerForHelp(chatId, telegramId, text);
-    }
-
-    private void sendInvalidPhoneNumberMessage(String chatId) {
-        SendMessage message = new SendMessage(chatId, "Вы ввели некорректный номер телефона, попробуйте заново.");
-        message.replyMarkup(createBackKeyboard());
-        telegramBot.execute(message);
-    }
-
-    private void askVolunteerForHelp(String chatId, String telegramId, String text) {
-        Users volunteer = userService.findAnyVolunteerFromUsers();
-        String volunteerTelegramId = volunteer.getTelegramId();
-        SendMessage message = new SendMessage(volunteerTelegramId, "Просьба о волонтёрской помощи по номеру: " + text + " telegram ID: " + telegramId);
-        telegramBot.execute(message);
-        clearContactInfoState(chatId);
-    }
-
+    /**
+     * Отправка информации о приюте.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendShelterInfoMenu(String chatId) {
         logger.info("Sending shelter info menu to chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Что вы хотели бы узнать?");
@@ -216,6 +210,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.execute(message);
     }
 
+    /**
+     * Методы по обработке кнопок с информацией о приюте.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendShelterHistory(String chatId) {
         logger.info("Sending shelter history to chat {}", chatId);
         sendMessageWithBackButton(chatId, HISTORY, "shelters", "shelter_info");
@@ -243,6 +242,94 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         sendMessageWithBackButton(chatId, SAFETY_MEASURES, "shelters", "shelter_info");
     }
 
+
+    /**
+     * Инициация помощи волонтёра.
+     *
+     * @param chatId Идентификатор чата.
+     */
+    private void initiateVolunteerHelp(String chatId) {
+        logger.info("Initiating volunteer help for chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, "Отправьте пожалуйста номер телефона (в формате: +74953500505), который привязан к вашему Telegram. Убедитесь в настройках конфиденциальности в том, что вас можно найти по номеру телефона.");
+        telegramBot.execute(message);
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("volunteer_help", "main_menu"));
+        message.replyMarkup(createBackKeyboard());
+        chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.DROP);
+    }
+
+    /**
+     * Обработка полученного номера телефона.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     * @param text       Текст сообщения.
+     */
+    private void gotPhoneNumber(String chatId, String telegramId, String text) {
+        if (isValidPhoneNumber(text)) {
+            logger.info("Received valid phone number from chat {}", chatId);
+            sendVolunteerConfirmation(chatId, telegramId, text);
+        } else {
+            logger.warn("Received invalid phone number from chat {}", chatId);
+            sendInvalidPhoneNumberMessage(chatId);
+        }
+    }
+
+    /**
+     * Проверка валидности номера телефона.
+     *
+     * @param text Текст сообщения.
+     * @return Возвращает true, если номер телефона валиден, иначе false.
+     */
+    private boolean isValidPhoneNumber(String text) {
+        return text != null && text.trim().matches("^\\+7\\d{10}$");
+    }
+
+    /**
+     * Отправка подтверждения получения номера телефона.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     * @param text       Текст сообщения.
+     */
+    private void sendVolunteerConfirmation(String chatId, String telegramId, String text) {
+        SendMessage message = new SendMessage(chatId, "Благодарим, волонтёр свяжется с вами в ближайшее время");
+        telegramBot.execute(message);
+        message.replyMarkup(createBackKeyboard());
+        askVolunteerForHelp(chatId, telegramId, text);
+    }
+
+    /**
+     * Отправка сообщения о неверном номере телефона.
+     *
+     * @param chatId Идентификатор чата.
+     */
+    private void sendInvalidPhoneNumberMessage(String chatId) {
+        SendMessage message = new SendMessage(chatId, "Вы ввели некорректный номер телефона, попробуйте заново.");
+        message.replyMarkup(createBackKeyboard());
+        telegramBot.execute(message);
+    }
+
+    /**
+     * Отправка рандомному волонтёру из БД информации о необходим консультации.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     * @param text       Текст сообщения.
+     */
+    private void askVolunteerForHelp(String chatId, String telegramId, String text) {
+        Users volunteer = userService.findAnyVolunteerFromUsers();
+        String volunteerTelegramId = volunteer.getTelegramId();
+        SendMessage message = new SendMessage(volunteerTelegramId, "Просьба о волонтёрской помощи по номеру: " + text + " telegram ID: " + telegramId);
+        telegramBot.execute(message);
+        clearContactInfoState(chatId);
+    }
+
+
+    /**
+     * Создание кнопок с инофрмацием по тому, как можно взять животное из приюта.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendMessageHowToTakeAPet(String chatId) {
         logger.info("Sending message how to take a pet to chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Что вы хотели бы узнать?");
@@ -251,6 +338,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.execute(message);
     }
 
+    /**
+     * Методы по обработке кнопок с информацией о том, как взять животное из приюта.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendPreAdoptionRules(String chatId) {
         logger.info("Sending pre-adoption rules to chat {}", chatId);
         sendMessageWithBackButton(chatId, PRE_ADOPTION_RULES, "how_to_take_a_pet", "take_a_pet_menu");
@@ -296,14 +388,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         sendMessageWithBackButton(chatId, ADOPTION_REJECTION_REASONS, "how_to_take_a_pet", "take_a_pet_menu");
     }
 
+    /**
+     * Обработка нажатия кнопки "Назад".
+     * Этот метод восстанавливает предыдущее состояние чата на основе
+     * сохранённого состояния в {@code chatStateForBackButtonMap}.
+     *
+     * @param chatId Идентификатор чата, в котором была нажата кнопка "Назад".
+     */
     private void handleBackButton(String chatId) {
         logger.info("Handling back button for chat {}", chatId);
-        ChatStateForBackButton state = chatStateForBackButtonMap.get(chatId);
+        String state = chatStateForBackButtonMap.get(chatId).getPreviousMenu();
         if (state != null) {
-            switch (state.getPreviousMenu()) {
-                case "main_menu":
-                    sendHelpMessage(chatId);
-                    break;
+            switch (state) {
                 case "take_a_pet_menu":
                     sendMessageHowToTakeAPet(chatId);
                     break;
@@ -319,6 +415,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+
+    /**
+     * Инициализирует процесс сбора контактной информации у пользователя.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void initiateContactInfoProcess(String chatId) {
         logger.info("Initiating contact info process for chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Как к вам можно обращаться?");
@@ -327,6 +429,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
     }
 
+    /**
+     * Обрабатывает процесс ввода контактной информации пользователем.
+     * Этот метод считывает состояние чата на основе
+     * сохранённого состояния в {@code chatStateForContactInfo}.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Введённый текст.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void handleContactInfoProcess(String chatId, String text, String telegramId) {
         switch (chatStateForContactInfoMap.get(chatId)) {
             case WAITING_FOR_FULL_NAME:
@@ -343,6 +454,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Обрабатывает ввод полного имени пользователя.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Введённый текст.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void processFullName(String chatId, String text, String telegramId) {
         if (isValidName(text)) {
             Users user = new Users();
@@ -358,16 +476,34 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Проверяет, является ли введённое имя допустимым.
+     *
+     * @param text Введённый текст.
+     * @return {@code true}, если имя допустимо, иначе {@code false}.
+     */
     private boolean isValidName(String text) {
         return text != null && !text.trim().isEmpty();
     }
 
+    /**
+     * Отправляет сообщение о некорректном имени пользователю.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendInvalidNameMessage(String chatId) {
         SendMessage message = new SendMessage(chatId, "Вы ввели некорректное имя, попробуйте заново.");
         message.replyMarkup(createBackKeyboard());
         telegramBot.execute(message);
     }
 
+    /**
+     * Обрабатывает ввод номера телефона пользователя.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Введённый текст.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void processPhoneNumber(String chatId, String text, String telegramId) {
         if (isValidPhoneNumber(text)) {
             Users user = userContactMap.get(telegramId);
@@ -381,6 +517,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Обрабатывает подтверждение контактной информации пользователем.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param text       Введённый текст.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void processConfirmation(String chatId, String text, String telegramId) {
         if (text.equalsIgnoreCase("да")) {
             saveUserContactInfo(chatId, telegramId);
@@ -391,6 +534,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Сохраняет контактную информацию пользователя.
+     *
+     * @param chatId     Идентификатор чата.
+     * @param telegramId Идентификатор пользователя в Telegram.
+     */
     private void saveUserContactInfo(String chatId, String telegramId) {
         Users user = userContactMap.get(telegramId);
         userService.createUser(user);
@@ -400,6 +549,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         clearContactInfoState(chatId);
     }
 
+    /**
+     * Начинает процесс повторного ввода контактной информации пользователем.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void retryContactInfoProcess(String chatId) {
         SendMessage message = new SendMessage(chatId, "Введите ваше имя повторно.");
         telegramBot.execute(message);
@@ -407,16 +561,35 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
     }
 
+    /**
+     * Отправляет сообщение о некорректном подтверждении пользователю.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void sendInvalidConfirmationMessage(String chatId) {
         SendMessage message = new SendMessage(chatId, "Некорректный ответ. Пожалуйста, ответьте 'Да' или 'Нет'.");
         message.replyMarkup(createBackKeyboard());
         telegramBot.execute(message);
     }
 
+    /**
+     * Очищает состояние процесса сбора контактной информации.
+     *
+     * @param chatId Идентификатор чата.
+     */
     private void clearContactInfoState(String chatId) {
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.NONE);
     }
 
+    /**
+     * Отправляет сообщение с кнопкой "Назад", которая обрабатывается в методе
+     * (code: handleBackButton).
+     *
+     * @param chatId          Идентификатор чата.
+     * @param text            Отправляемый текст
+     * @param backButtonState Состояние кнопки назад
+     * @param previousState   Предыдущее меню, в котором был пользователь
+     */
     private void sendMessageWithBackButton(String chatId, String text, String backButtonState, String previousState) {
         SendMessage message = new SendMessage(chatId, text);
         message.replyMarkup(createBackKeyboard());
@@ -484,21 +657,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
 
-    private ReplyKeyboardMarkup createKeyboardForContactInfo() {
-        KeyboardButton button1 = new KeyboardButton("Согласен(-на)");
-        KeyboardButton button2 = new KeyboardButton("Назад");
-
-        KeyboardButton[][] keyboardButtons = {
-                {button1, button2}
-        };
-
-        return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
-    }
-
     private ReplyKeyboardMarkup createBackKeyboard() {
         KeyboardButton button = new KeyboardButton("Назад");
         KeyboardButton[] keyboardButtons = {button};
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
-
 }
