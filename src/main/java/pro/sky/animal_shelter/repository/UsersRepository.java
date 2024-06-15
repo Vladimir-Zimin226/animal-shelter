@@ -14,5 +14,8 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     Users findUserByTelegramId(String telegramId);
 
+    @Query(value = "SELECT * FROM users WHERE is_volunteer = true ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
+    Users findAnyVolunteerForConsultansy();
+
 
 }
