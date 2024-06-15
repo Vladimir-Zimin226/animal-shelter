@@ -58,4 +58,9 @@ public class UserServiceImpl implements UserService {
     public Users findUserByTelegramId(String telegramId) {
         return usersRepository.findUserByTelegramId(telegramId);
     }
+
+    @Override
+    public Users findAnyVolunteerFromUsers() {
+        return usersRepository.findAnyVolunteerForConsultansy();
+    }
 }
