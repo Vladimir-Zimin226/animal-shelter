@@ -2,6 +2,7 @@ package pro.sky.animal_shelter.service.implementations;
 
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Users;
+import pro.sky.animal_shelter.exception.UserNotFoundException;
 import pro.sky.animal_shelter.repository.UsersRepository;
 import pro.sky.animal_shelter.service.services.UserService;
 
@@ -19,7 +20,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Users createUser(Users user) {
         if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+            throw new UserNotFoundException();
         }
         return usersRepository.save(user);
     }
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
     public Users updateUser(long id, Users user) {
         Users updatedUser = usersRepository.findUsersById(id);
         if (updatedUser == null) {
-            throw new IllegalArgumentException("User not found with id: " + id);
+            throw new UserNotFoundException();
         }
         updatedUser.setName(user.getName());
         updatedUser.setPhoneNumber(user.getPhoneNumber());
@@ -44,7 +45,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUserById(Long userId) {
         if (!usersRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found with id: " + userId);
+            throw new UserNotFoundException();
         }
         usersRepository.deleteById(userId);
     }
