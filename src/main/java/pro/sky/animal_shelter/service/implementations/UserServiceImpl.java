@@ -1,13 +1,14 @@
-package pro.sky.animal_shelter.service;
+package pro.sky.animal_shelter.service.implementations;
 
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Users;
 import pro.sky.animal_shelter.repository.UsersRepository;
+import pro.sky.animal_shelter.service.services.UserService;
 
 import java.util.List;
 
 @Service
-public class UserServiceImpl implements UserSrvice {
+public class UserServiceImpl implements UserService {
 
     private final UsersRepository usersRepository;
 
@@ -34,6 +35,7 @@ public class UserServiceImpl implements UserSrvice {
         return usersRepository.save(updatedUser);
     }
 
+
     @Override
     public List<Users> getAllUsers() {
         return usersRepository.findAll();
@@ -50,5 +52,15 @@ public class UserServiceImpl implements UserSrvice {
     @Override
     public List<Users> getAllVolunteer() {
         return usersRepository.findUsersByIsVolunteerIsTrue();
+    }
+
+    @Override
+    public Users findUserByTelegramId(String telegramId) {
+        return usersRepository.findUserByTelegramId(telegramId);
+    }
+
+    @Override
+    public Users findAnyVolunteerFromUsers() {
+        return usersRepository.findAnyVolunteerForConsultansy();
     }
 }
