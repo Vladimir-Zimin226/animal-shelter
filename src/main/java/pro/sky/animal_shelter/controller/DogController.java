@@ -84,12 +84,12 @@ public class DogController {
                             responseCode = "200",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Dogs .class)
+                                    schema = @Schema(implementation = Dogs.class)
                             )
                     )
             })
 
-    @DeleteMapping("/{dogId}")
+    @DeleteMapping("/delete/{dogId}")
     public ResponseEntity<Void> deleteDogById(@PathVariable Long dogId) {
         dogService.deleteDogById(dogId);
         return ResponseEntity.ok().build();
@@ -142,5 +142,4 @@ public class DogController {
     public ResponseEntity<List<Dogs>> getAllDogsWhoFoundHome() {
         return ResponseEntity.ok(dogService.getAllWhoFoundHome());
     }
-
 }
