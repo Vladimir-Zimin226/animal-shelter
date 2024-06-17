@@ -1,8 +1,10 @@
-package pro.sky.animal_shelter.service;
+package pro.sky.animal_shelter.service.implementations;
 
 import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Dogs;
+import pro.sky.animal_shelter.exception.DogNotFoundException;
 import pro.sky.animal_shelter.repository.DogsRepository;
+import pro.sky.animal_shelter.service.services.DogService;
 
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class DogServiceImpl implements DogService {
     @Override
     public Dogs createDog(Dogs dog) {
         if (dog == null) {
-            throw new IllegalArgumentException("Dogs cannot be null");
+            throw new DogNotFoundException();
         }
         return dogsRepository.save(dog);
     }
@@ -27,7 +29,7 @@ public class DogServiceImpl implements DogService {
     public Dogs updateDog(long id, Dogs dog) {
         Dogs updatedDog = dogsRepository.findDogsById(id);
         if (updatedDog == null) {
-            throw new IllegalArgumentException("Dog not found with id: " + id);
+            throw new DogNotFoundException();
         }
         updatedDog.setName(dog.getName());
         updatedDog.setBreed(dog.getBreed());
@@ -48,7 +50,7 @@ public class DogServiceImpl implements DogService {
     @Override
     public void deleteDogById(Long dogId) {
         if (!dogsRepository.existsById(dogId)) {
-            throw new IllegalArgumentException("Dog not found with id: " + dogId);
+            throw new DogNotFoundException();
         }
         dogsRepository.deleteById(dogId);
     }

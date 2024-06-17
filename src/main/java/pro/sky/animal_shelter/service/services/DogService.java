@@ -1,7 +1,8 @@
-package pro.sky.animal_shelter.service;
+package pro.sky.animal_shelter.service.services;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import pro.sky.animal_shelter.entity.Dogs;
+import pro.sky.animal_shelter.exception.DogNotFoundException;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface DogService {
      * @see  JpaRepository#save(Object)
      * @param dog объект класса {@link Dogs}, не может быть {@code null}
      * @return отредактированный объект класса {@link Dogs}
-     * @throws IllegalArgumentException если песик не был найден в базе данных
+     * @throws DogNotFoundException если песик не был найден в базе данных
      */
     Dogs updateDog(long id, Dogs dog);
 
@@ -35,7 +36,7 @@ public interface DogService {
      * Удаление песика из базы данных по его {@code id} <br>
      * @see JpaRepository#deleteById(Object)
      * @param dogId идентификатор песика, которого нужно удалить из базы данных, не может быть {@code null}
-     * @return {@code true} если объект был найден в базе данных, в противном случае {@link IllegalArgumentException}
+     * @return {@code true} если объект был найден в базе данных, в противном случае {@link DogNotFoundException}
      */
     void deleteDogById(Long dogId);
 
