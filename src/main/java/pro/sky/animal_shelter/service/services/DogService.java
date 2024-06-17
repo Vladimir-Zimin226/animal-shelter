@@ -56,4 +56,5 @@ public interface DogService {
      * @return найденный список объектов класса {@link Dogs}
      */
     List<Dogs> getAllWhoNeededOwner();
+
 }
