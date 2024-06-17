@@ -1,6 +1,7 @@
 package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
+
 import java.util.Objects;
 
 @Entity
@@ -10,13 +11,13 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Many reports can belong to one user
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @OneToOne
-    @JoinColumn(name = "photo_id")
-    private PhotoOfPet photoOfPet;
+    @Lob
+    @Column(name = "photo_of_pet", nullable = false)
+    private byte[] photoOfPet;
 
     @Column(name = "diet", length = 1024)
     private String diet;
@@ -27,7 +28,16 @@ public class Report {
     @Column(name = "behavior_changes", length = 1024)
     private String behaviorChanges;
 
-    // Getters and Setters
+    public Report() {
+    }
+
+    public Report(Users user, byte[] photoOfPet, String diet, String wellBeing, String behaviorChanges) {
+        this.user = user;
+        this.photoOfPet = photoOfPet;
+        this.diet = diet;
+        this.wellBeing = wellBeing;
+        this.behaviorChanges = behaviorChanges;
+    }
 
     public Long getId() {
         return id;
@@ -45,11 +55,11 @@ public class Report {
         this.user = user;
     }
 
-    public PhotoOfPet getPhotoOfPet() {
+    public byte[] getPhotoOfPet() {
         return photoOfPet;
     }
 
-    public void setPhotoOfPet(PhotoOfPet photoOfPet) {
+    public void setPhotoOfPet(byte[] photoOfPet) {
         this.photoOfPet = photoOfPet;
     }
 
@@ -82,11 +92,11 @@ public class Report {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Report report = (Report) o;
-        return Objects.equals(id, report.id) && Objects.equals(user, report.user) && Objects.equals(photoOfPet, report.photoOfPet) && Objects.equals(diet, report.diet) && Objects.equals(wellBeing, report.wellBeing) && Objects.equals(behaviorChanges, report.behaviorChanges);
+        return Objects.equals(id, report.id) && Objects.equals(user, report.user);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, photoOfPet, diet, wellBeing, behaviorChanges);
+        return Objects.hash(id, user);
     }
 }

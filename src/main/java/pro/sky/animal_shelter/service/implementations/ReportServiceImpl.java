@@ -1,23 +1,11 @@
 package pro.sky.animal_shelter.service.implementations;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import pro.sky.animal_shelter.entity.PhotoOfPet;
 import pro.sky.animal_shelter.entity.Report;
 import pro.sky.animal_shelter.repository.ReportRepository;
 import pro.sky.animal_shelter.service.services.ReportService;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
-
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 
 @Service

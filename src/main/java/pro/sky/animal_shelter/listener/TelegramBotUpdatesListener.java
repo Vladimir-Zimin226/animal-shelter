@@ -1,13 +1,12 @@
 package pro.sky.animal_shelter.listener;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.pengrad.telegrambot.model.File;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.response.GetFileResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,11 +17,8 @@ import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.multipart.MultipartFile;
 import pro.sky.animal_shelter.chatStates.ChatStateForBackButton;
 import pro.sky.animal_shelter.chatStates.ChatStateForContactInfo;
-import pro.sky.animal_shelter.entity.Dogs;
-import pro.sky.animal_shelter.entity.PhotoOfPet;
 import pro.sky.animal_shelter.entity.Report;
 import pro.sky.animal_shelter.entity.Users;
 import pro.sky.animal_shelter.service.services.DogService;
@@ -30,7 +26,11 @@ import pro.sky.animal_shelter.service.services.ReportService;
 import pro.sky.animal_shelter.service.services.UserService;
 
 import java.io.IOException;
-import java.util.Comparator;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final UserService userService;
     private final ReportService reportService;
     private final DogService dogService;
+
+    @Value("${reports.photos.dir.path}")
+    private String photosDir;
 
     @Autowired
     private TelegramBot telegramBot;
@@ -676,21 +679,37 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
 
     private void handlePhoto(Message message, String chatId, String telegramId) {
-        if (message.photo() != null) {
-            PhotoSize[] photoSizes = message.photo();
-            PhotoSize largestPhoto = photoSizes[photoSizes.length - 1];
-            String fileId = largestPhoto.fileId();
-            GetFile getFileRequest = new GetFile(fileId);
-            File file = telegramBot.execute(getFileRequest).file();
-            SendMessage message1 = new SendMessage(chatId, "Фото получено!");
-            telegramBot.execute(message1);
-            Report report = new Report();
-            report.setPhotoOfPet(fileId, file.filePath(), file.fileSize(), file.()));
-            chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_DIET_OF_PET);
-        } else {
-            SendMessage message2 = new SendMessage(chatId, "Фото не найдено!");
-            telegramBot.execute(message2);
+        PhotoSize photo = getLargestPhoto(message.photo());
+        if (photo != null) {
+            try {
+                GetFile request = new GetFile(photo.fileId());
+                GetFileResponse getFileResponse = telegramBot.execute(request);
+                com.pengrad.telegrambot.model.File file = getFileResponse.file();
+                String filePath = file.filePath();
+
+                String fileUrl = telegramBot.getFullFilePath(file);
+                byte[] photoData;
+                try (InputStream inputStream = new URL(fileUrl).openStream()) {
+                    photoData = inputStream.readAllBytes();
+                }
+                Report report = new Report();
+                report.setPhotoOfPet(photoData);
+                reportMap.put(chatId, report);
+                SendMessage message1 = new SendMessage(chatId, "Теперь отправьте пожалуйста рацион питомца");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    private PhotoSize getLargestPhoto(PhotoSize[] photos) {
+        PhotoSize largestPhoto = null;
+        for (PhotoSize photo : photos) {
+            if (largestPhoto == null || photo.fileSize() > largestPhoto.fileSize()) {
+                largestPhoto = photo;
+            }
+        }
+        return largestPhoto;
     }
 
     private ReplyKeyboardMarkup createKeyBoardForStart() {
