@@ -2,7 +2,6 @@ package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -153,6 +152,7 @@ public class Dogs {
         Dogs dogs = (Dogs) o;
         return Objects.equals(id, dogs.id);
     }
+
 
     @Override
     public int hashCode() {

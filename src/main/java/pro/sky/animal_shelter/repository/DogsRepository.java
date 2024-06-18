@@ -14,4 +14,5 @@ public interface DogsRepository extends JpaRepository<Dogs, Long> {
     List<Dogs> findDogsByFindCuratorIsTrue();
     List<Dogs> findDogsByFindOwnerIsTrue();
 
+
 }
