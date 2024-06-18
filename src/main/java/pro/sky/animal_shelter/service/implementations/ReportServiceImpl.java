@@ -1,58 +1,58 @@
 package pro.sky.animal_shelter.service.implementations;
 
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import pro.sky.animal_shelter.entity.PhotoOfPet;
 import pro.sky.animal_shelter.entity.Report;
+import pro.sky.animal_shelter.entity.Users;
+import pro.sky.animal_shelter.exception.ReportNotFoundException;
 import pro.sky.animal_shelter.repository.ReportRepository;
+import pro.sky.animal_shelter.repository.UsersRepository;
 import pro.sky.animal_shelter.service.services.ReportService;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Objects;
-
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import java.util.List;
 
 
 @Service
-@Transactional
 public class ReportServiceImpl implements ReportService {
 
-
+    private final UsersRepository userRepository;
     private final ReportRepository reportRepository;
 
-    public ReportServiceImpl(ReportRepository reportRepository) {
+    public ReportServiceImpl(UsersRepository userRepository, ReportRepository reportRepository) {
+        this.userRepository = userRepository;
         this.reportRepository = reportRepository;
     }
 
-
     @Override
-    public Report createReport(Report report) {
-        if (report == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        } else {
-            return reportRepository.save(report);
-        }
+    public Report createReport(Long userId) {
+        Users existingUser = userRepository.findUsersById(userId);
 
+        Report report = reportRepository.findReportByUser(existingUser);
+        if (report == null) {
+            report = new Report();
+            report.setUser(existingUser);
+            reportRepository.save(report);
+        }
+        return report;
     }
 
     @Override
     public void deleteReport(Long reportId) {
         if (!reportRepository.existsById(reportId)) {
-            throw new IllegalArgumentException("User not found with id: " + reportId);
+            throw new ReportNotFoundException();
         }
         reportRepository.deleteById(reportId);
     }
 
+
     @Override
-    public Report findReportByUserId(Long userId) {
-        return reportRepository.findReportByUserId(userId);
+    public Report findReportByUserId(Users user) {
+
+        return reportRepository.findReportByUser(user);
+    }
+
+    @Override
+    public List<Report> getAllReports() {
+        return reportRepository.findAll();
     }
 
 }

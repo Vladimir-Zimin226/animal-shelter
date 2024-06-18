@@ -14,9 +14,8 @@ public class Report {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @OneToOne
-    @JoinColumn(name = "photo_id")
-    private PhotoOfPet photoOfPet;
+    @Column(name = "photo")
+    private String photoOfPet;
 
     @Column(name = "diet", length = 1024)
     private String diet;
@@ -45,11 +44,11 @@ public class Report {
         this.user = user;
     }
 
-    public PhotoOfPet getPhotoOfPet() {
+    public String getPhotoOfPet() {
         return photoOfPet;
     }
 
-    public void setPhotoOfPet(PhotoOfPet photoOfPet) {
+    public void setPhotoOfPet(String photoOfPet) {
         this.photoOfPet = photoOfPet;
     }
 
@@ -80,13 +79,12 @@ public class Report {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Report report = (Report) o;
-        return Objects.equals(id, report.id) && Objects.equals(user, report.user) && Objects.equals(photoOfPet, report.photoOfPet) && Objects.equals(diet, report.diet) && Objects.equals(wellBeing, report.wellBeing) && Objects.equals(behaviorChanges, report.behaviorChanges);
+        if (!(o instanceof Report report)) return false;
+        return Objects.equals(getId(), report.getId()) && Objects.equals(getUser(), report.getUser()) && Objects.equals(getPhotoOfPet(), report.getPhotoOfPet()) && Objects.equals(getDiet(), report.getDiet()) && Objects.equals(getWellBeing(), report.getWellBeing()) && Objects.equals(getBehaviorChanges(), report.getBehaviorChanges());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, photoOfPet, diet, wellBeing, behaviorChanges);
+        return Objects.hash(getId(), getUser(), getPhotoOfPet(), getDiet(), getWellBeing(), getBehaviorChanges());
     }
 }
