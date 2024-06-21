@@ -31,10 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 
@@ -55,6 +52,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final Map<String, ChatStateForContactInfo> chatStateForContactInfoMap = new HashMap<>();
     private final Map<String, ChatStateForReportProcess> chatStateForReportProcessMap = new HashMap<>();
     private final Map<String, Users> userContactMap = new HashMap<>();
+
+    private boolean isPhotoProcessing = false;
 
     @Autowired
     public TelegramBotUpdatesListener(UserService userService, UsersRepository usersRepository, ReportRepository reportRepository) {
@@ -78,6 +77,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
+
             if (update.message() != null && update.message().text() != null) {
                 String chatId = String.valueOf(update.message().chat().id());
                 String text = update.message().text();
@@ -96,9 +96,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Обработка кнопок с обновлениями.
      *
-     * @param chatId     Идентификатор чата.
-     * @param text       Текст сообщения.
-     * @param telegramId Идентификатор пользователя в Telegram.
+     * @param chatId        Идентификатор чата.
+     * @param text          Текст сообщения.
+     * @param telegramId    Идентификатор пользователя в Telegram.
      */
     private void handleUpdate(String chatId, String text, String telegramId, Update update) throws IOException {
         switch (text) {
@@ -173,6 +173,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 break;
             case "Начать процесс":
                 processBegins(chatId, update);
+                if (isPhotoProcessing) {
+                    uploadPhoto(chatId, update);
+                    isPhotoProcessing = false;
+                } else {
+                    SendMessage errorMessage = new SendMessage(chatId, "Пожалуйста, отправьте фото.");
+                    telegramBot.execute(errorMessage);
+                }
                 break;
             case "Сохранить фото":
                 uploadPhoto(chatId, update);
@@ -752,10 +759,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
 
         SendMessage pleasePhotomessage = new SendMessage(chatId, "Пришлите фото питомца");
+        isPhotoProcessing = true;
         pleasePhotomessage.replyMarkup(createKeyboardForPhoto());
         telegramBot.execute(pleasePhotomessage);
 
-        /*// Загрузить фото и установить его в отчет
+        // Загрузить фото и установить его в отчет
         try {
             Path photoPath = uploadPhoto(chatId, update);
             if (photoPath != null) {
@@ -766,7 +774,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } catch (UploadPhotoException e) {
             logger.error("Ошибка при загрузке фото для чата {}: {}", chatId, e.getMessage());
             // Обработка ошибки, если необходимо
-        }*/
+        }
     }
 
     private Path uploadPhoto(String chatId, Update update) throws UploadPhotoException {
