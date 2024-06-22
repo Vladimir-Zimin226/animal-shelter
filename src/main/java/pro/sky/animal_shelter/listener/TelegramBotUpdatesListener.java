@@ -1,8 +1,11 @@
 package pro.sky.animal_shelter.listener;
 
+import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.pengrad.telegrambot.request.GetFile;
 import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.response.GetFileResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,14 +15,23 @@ import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import pro.sky.animal_shelter.chatStates.ChatStateForBackButton;
 import pro.sky.animal_shelter.chatStates.ChatStateForContactInfo;
+import pro.sky.animal_shelter.chatStates.ChatStateForReportProcess;
+import pro.sky.animal_shelter.entity.Report;
 import pro.sky.animal_shelter.entity.Users;
+import pro.sky.animal_shelter.exception.UploadPhotoException;
+import pro.sky.animal_shelter.exception.UserNotFoundException;
+import pro.sky.animal_shelter.repository.ReportRepository;
+import pro.sky.animal_shelter.repository.UsersRepository;
 import pro.sky.animal_shelter.service.services.UserService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 
@@ -30,17 +42,24 @@ import static pro.sky.animal_shelter.content.TelegramBotContent.*;
 public class TelegramBotUpdatesListener implements UpdatesListener {
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     private final UserService userService;
+    private final UsersRepository usersRepository;
+    private final ReportRepository reportRepository;
 
     @Autowired
     private TelegramBot telegramBot;
 
     private final Map<String, ChatStateForBackButton> chatStateForBackButtonMap = new HashMap<>();
     private final Map<String, ChatStateForContactInfo> chatStateForContactInfoMap = new HashMap<>();
+    private final Map<String, ChatStateForReportProcess> chatStateForReportProcessMap = new HashMap<>();
     private final Map<String, Users> userContactMap = new HashMap<>();
 
+    private boolean isPhotoProcessing = false;
+
     @Autowired
-    public TelegramBotUpdatesListener(UserService userService) {
+    public TelegramBotUpdatesListener(UserService userService, UsersRepository usersRepository, ReportRepository reportRepository) {
         this.userService = userService;
+        this.usersRepository = usersRepository;
+        this.reportRepository = reportRepository;
     }
 
     @PostConstruct
@@ -58,12 +77,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
+
             if (update.message() != null && update.message().text() != null) {
                 String chatId = String.valueOf(update.message().chat().id());
                 String text = update.message().text();
                 String telegramId = String.valueOf(update.message().from().id());
 
-                handleUpdate(chatId, text, telegramId);
+                try {
+                    handleUpdate(chatId, text, telegramId, update);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -72,11 +96,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Обработка кнопок с обновлениями.
      *
-     * @param chatId     Идентификатор чата.
-     * @param text       Текст сообщения.
-     * @param telegramId Идентификатор пользователя в Telegram.
+     * @param chatId        Идентификатор чата.
+     * @param text          Текст сообщения.
+     * @param telegramId    Идентификатор пользователя в Telegram.
      */
-    private void handleUpdate(String chatId, String text, String telegramId) {
+    private void handleUpdate(String chatId, String text, String telegramId, Update update) throws IOException {
         switch (text) {
             case "/start":
                 sendWelcomeMessage(chatId);
@@ -141,6 +165,24 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             case "Оставить контакты для связи":
                 initiateContactInfoProcess(chatId);
                 break;
+            case "Прислать имя":
+                handleContactInfoProcess(chatId, text, telegramId);
+                break;
+            case "Прислать отчёт о питомце":
+                initiateReport(chatId);
+                break;
+            case "Начать процесс":
+                processBegins(chatId, update);
+                if (isPhotoProcessing) {
+                    uploadPhoto(chatId, update);
+                    isPhotoProcessing = false;
+                } else {
+                    SendMessage errorMessage = new SendMessage(chatId, "Пожалуйста, отправьте фото.");
+                    telegramBot.execute(errorMessage);
+                }
+                break;
+            case "Сохранить фото":
+                uploadPhoto(chatId, update);
             default:
                 handleDefault(chatId, text, telegramId);
                 break;
@@ -397,7 +439,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private void handleBackButton(String chatId) {
         logger.info("Handling back button for chat {}", chatId);
-        String state = chatStateForBackButtonMap.get(chatId).getPreviousMenu();
+        String state = chatStateForBackButtonMap.getOrDefault(chatId, new ChatStateForBackButton("none", "main_menu")).getPreviousMenu();
         if (state != null) {
             switch (state) {
                 case "take_a_pet_menu":
@@ -424,8 +466,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void initiateContactInfoProcess(String chatId) {
         logger.info("Initiating contact info process for chat {}", chatId);
         SendMessage message = new SendMessage(chatId, "Как к вам можно обращаться?");
-        telegramBot.execute(message);
         message.replyMarkup(createBackKeyboard());
+        telegramBot.execute(message);
         chatStateForContactInfoMap.put(chatId, ChatStateForContactInfo.WAITING_FOR_FULL_NAME);
     }
 
@@ -597,11 +639,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton(backButtonState, previousState));
     }
 
-
-    /**
-     * Методы по созданию кнопок
-     */
-
     private ReplyKeyboardMarkup createKeyBoardForStart() {
         KeyboardButton button1 = new KeyboardButton("Узнать информацию о приюте");
         KeyboardButton button2 = new KeyboardButton("Как взять животное из приюта");
@@ -662,4 +699,230 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         KeyboardButton[] keyboardButtons = {button};
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
+
+    private ReplyKeyboardMarkup createKeyboardForReport() {
+        KeyboardButton button = new KeyboardButton("Начать процесс");
+        KeyboardButton button1 = new KeyboardButton("Назад");
+
+        KeyboardButton[] buttons = {button, button1};
+
+        return new ReplyKeyboardMarkup(buttons).resizeKeyboard(true).oneTimeKeyboard(true);
+    }
+
+    private ReplyKeyboardMarkup createKeyboardForPhoto() {
+        KeyboardButton button = new KeyboardButton("Сохранить фото");
+        KeyboardButton button1 = new KeyboardButton("Назад");
+
+        KeyboardButton[] buttons = {button, button1};
+
+        return new ReplyKeyboardMarkup(buttons).resizeKeyboard(true).oneTimeKeyboard(true);
+    }
+
+    /**
+     * Метод по инициации процесса по отправке отчёта о питомце
+     *
+     * @param chatId Идентификатор чата.
+     */
+
+    private void initiateReport(String chatId) {
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("otchet_o_pitomce", "main_menu"));
+        SendMessage message = new SendMessage(chatId, OTCHET_O_PITOMCE);
+        message.replyMarkup(createKeyboardForReport());
+        telegramBot.execute(message);
+    }
+
+    private void processBegins(String chatId, Update update) {
+        // Получаем ID пользователя
+        Long userId = (update.message() != null && update.message().from() != null) ? update.message().from().id() : null;
+        logger.info("ID пользователя для чата {}: {}", chatId, userId);
+        if (userId == null) {
+            logger.error("Не удалось получить ID пользователя для чата {}", chatId);
+            SendMessage errorMessage = new SendMessage(chatId, "Не удалось получить ID пользователя.");
+            telegramBot.execute(errorMessage);
+            return;
+        }
+
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> {
+                    SendMessage warningMessage = new SendMessage(chatId, "Вы не можете отправлять отчет, сначала возьмите животное из приюта");
+                    telegramBot.execute(warningMessage);
+                    return new UserNotFoundException();
+                });
+        // Создаем или восстанавливаем отчет для текущего пользователя
+        Report newReport = reportRepository.findReportByUser(user);
+        logger.info("Текущий отчет для пользователя {}: {}", userId, newReport);
+        if (newReport == null) {
+            newReport = new Report();
+            logger.info("Создан новый отчет для пользователя {}", userId);
+            newReport.setUser(user);
+            logger.info("Сохраняем ID пользователя для созданного отчета");
+        }
+
+        SendMessage pleasePhotomessage = new SendMessage(chatId, "Пришлите фото питомца");
+        isPhotoProcessing = true;
+        pleasePhotomessage.replyMarkup(createKeyboardForPhoto());
+        telegramBot.execute(pleasePhotomessage);
+
+        // Загрузить фото и установить его в отчет
+        try {
+            Path photoPath = uploadPhoto(chatId, update);
+            if (photoPath != null) {
+                newReport.setPhotoOfPet(photoPath.toString());
+                logger.info("Фото получено и добавлено в отчет для пользователя {}", userId);
+                reportRepository.save(newReport); // Сохранить отчет, если фото успешно загружено
+            }
+        } catch (UploadPhotoException e) {
+            logger.error("Ошибка при загрузке фото для чата {}: {}", chatId, e.getMessage());
+            // Обработка ошибки, если необходимо
+        }
+    }
+
+    private Path uploadPhoto(String chatId, Update update) throws UploadPhotoException {
+        if (update.message() != null && update.message().photo() != null && update.message().photo().length > 0) {
+            logger.info("Фото получено для чата {}. Начинается обработка фото.", chatId);
+            PhotoSize telegramPhoto = update.message().photo()[update.message().photo().length - 1];
+            GetFileResponse getFileResponse = telegramBot.execute(new GetFile(telegramPhoto.fileId()));
+            logger.info("Ответ на получение файла: {}", getFileResponse);
+
+            if (getFileResponse.isOk()) {
+                try {
+                    String extension = StringUtils.getFilenameExtension(getFileResponse.file().filePath());
+                    byte[] image = telegramBot.getFileContent(getFileResponse.file());
+                    Path write = Files.write(Paths.get(UUID.randomUUID() + "." + extension), image);
+                    logger.info("Фото успешно сохранено для чата {}.", chatId);
+                    // Вернуть путь к файлу после успешного сохранения
+                    return write;
+                } catch (IOException e) {
+                    logger.error("Ошибка при обработке фото для чата {}: {}", chatId, e.getMessage());
+                    SendMessage message = new SendMessage(chatId, "Простите, произошла ошибка при обработке фото. Пожалуйста, попробуйте еще раз.");
+                    telegramBot.execute(message);
+                }
+            } else {
+                logger.error("Не удалось получить файл фото: {}", getFileResponse.errorCode());
+                SendMessage errorMessage = new SendMessage(chatId, "Произошла ошибка при получении файла фото. Попробуйте еще раз.");
+                telegramBot.execute(errorMessage);
+            }
+        } else {
+            logger.info("Сообщение не содержит фото для чата {}", chatId);
+            SendMessage errorMessage = new SendMessage(chatId, "Допустимо только фото. Попробуйте еще раз.");
+            telegramBot.execute(errorMessage);
+        }
+        return null;  // Вернуть null, если что-то пошло не так
+    }
 }
+
+
+/*// Устанавливаем начальное состояние
+        chatStateForReportProcessMap.putIfAbsent(chatId, ChatStateForReportProcess.DEFAULT);
+
+// Получаем текущее состояние
+ChatStateForReportProcess currentState = chatStateForReportProcessMap.get(chatId);
+        logger.info("Текущее состояние для чата {}: {}", chatId, currentState);
+
+        if (currentState == null) {
+        logger.error("Состояние для чата {} не найдено", chatId);
+            return;
+                    }
+
+                    switch (currentState) {
+        case DEFAULT:
+        logger.info("Зашел в этапный switch для сбора информации для отчета");
+                chatStateForReportProcessMap.put(chatId, ChatStateForReportProcess.WAITING_FOR_PHOTO_OF_PET);
+                logger.info("Текущее состояние для чата {}: {}", chatId, currentState);
+promptForNextStep(chatId);
+                break;
+
+                        case WAITING_FOR_PHOTO_OF_PET:
+        logger.info("Зашел в этапный switch для обработки фото");
+                if (update.message() != null && update.message().photo() != null && update.message().photo().length > 0) {
+        logger.info("Фото получено для чата {}. Начинается обработка фото.", chatId);
+PhotoSize telegramPhoto = update.message().photo()[update.message().photo().length - 1];
+GetFileResponse getFileResponse = telegramBot.execute(new GetFile(telegramPhoto.fileId()));
+                    logger.info("Ответ на получение файла: {}", getFileResponse);
+
+                    if (getFileResponse.isOk()) {
+        try {
+String extension = StringUtils.getFilenameExtension(getFileResponse.file().filePath());
+byte[] image = telegramBot.getFileContent(getFileResponse.file());
+Path write = Files.write(Paths.get(UUID.randomUUID() + "." + extension), image);
+                            newReport.setPhotoOfPet(write.toString());
+
+        logger.info("Фото успешно сохранено для чата {}.", chatId);
+                            reportRepository.save(newReport);
+
+// Переходим к следующему состоянию
+                            chatStateForReportProcessMap.put(chatId, ChatStateForReportProcess.WAITING_FOR_DIET_OF_PET);
+promptForNextStep(chatId);
+
+                        } catch (IOException e) {
+        logger.error("Ошибка при обработке фото для чата {}: {}", chatId, e.getMessage());
+SendMessage message = new SendMessage(chatId, "Простите, произошла ошибка при обработке фото. Пожалуйста, попробуйте еще раз.");
+                            telegramBot.execute(message);
+                        }
+                                } else {
+                                logger.error("Не удалось получить файл фото: {}", getFileResponse.errorCode());
+SendMessage errorMessage = new SendMessage(chatId, "Произошла ошибка при получении файла фото. Попробуйте еще раз.");
+                        telegramBot.execute(errorMessage);
+                    }
+                            } else {
+                            logger.info("Сообщение не содержит фото для чата {}", chatId);
+SendMessage errorMessage = new SendMessage(chatId, "Допустимо только фото. Попробуйте еще раз.");
+                    telegramBot.execute(errorMessage);
+                }
+                        break;
+
+                        case WAITING_FOR_DIET_OF_PET:
+        logger.info("Ждем информацию о питании для чата {}", chatId);
+                if (update.message() != null && update.message().text() != null) {
+        newReport.setDiet(update.message().text());
+        reportRepository.save(newReport);
+
+// Переходим к следующему состоянию
+                    chatStateForReportProcessMap.put(chatId, ChatStateForReportProcess.WAITING_FOR_WELLBEING_INFO);
+promptForNextStep(chatId);
+                }
+                        break;
+
+                        case WAITING_FOR_WELLBEING_INFO:
+        logger.info("Ждем информацию о самочувствии для чата {}", chatId);
+                if (update.message() != null && update.message().text() != null) {
+        newReport.setWellBeing(update.message().text());
+        reportRepository.save(newReport);
+
+// Переходим к следующему состоянию
+                    chatStateForReportProcessMap.put(chatId, ChatStateForReportProcess.WAITING_FOR_HABITSCHANGES_INFO);
+promptForNextStep(chatId);
+                }
+                        break;
+
+                        case WAITING_FOR_HABITSCHANGES_INFO:
+        logger.info("Ждем информацию об изменениях в поведении для чатов {}", chatId);
+                if (update.message() != null && update.message().text() != null) {
+        newReport.setBehaviorChanges(update.message().text());
+
+        // Завершаем процесс
+        reportRepository.save(newReport);
+SendMessage confirmationMessage = new SendMessage(chatId, "Отчет добавлен. Не забывайте отправлять отчеты о вашем питомце ежедневно");
+                    telegramBot.execute(confirmationMessage);
+
+// Сбрасываем состояние
+                    chatStateForReportProcessMap.remove(chatId);
+                }
+                        break;
+
+    private void promptForNextStep(String chatId) {
+        ChatStateForReportProcess state = chatStateForReportProcessMap.get(chatId);
+        String prompt = switch (state) {
+            case DEFAULT -> "Пришлите фото питомца";
+            case WAITING_FOR_PHOTO_OF_PET -> "Ожидаем фото";
+            case WAITING_FOR_DIET_OF_PET -> "Пришлите информацию о питании";
+            case WAITING_FOR_WELLBEING_INFO -> "Пришлите информацию о самочувствии питомца";
+            case WAITING_FOR_HABITSCHANGES_INFO -> "Пришлите информацию о поведении и возможных изменениях";
+            default -> "";
+        };
+
+        logger.info("Запрос следующего шага для чата {}: {}", chatId, prompt);
+        SendMessage message = new SendMessage(chatId, prompt);
+        telegramBot.execute(message);
+    }*/
+
