@@ -8,6 +8,8 @@ import pro.sky.animal_shelter.repository.ReportRepository;
 import pro.sky.animal_shelter.repository.UsersRepository;
 import pro.sky.animal_shelter.service.services.ReportService;
 
+
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -22,6 +24,8 @@ public class ReportServiceImpl implements ReportService {
         this.reportRepository = reportRepository;
     }
 
+    LocalDate currentDate = LocalDate.now();
+
     @Override
     public Report createReport(Long userId) {
         Users existingUser = userRepository.findUsersById(userId);
@@ -30,6 +34,7 @@ public class ReportServiceImpl implements ReportService {
         if (report == null) {
             report = new Report();
             report.setUser(existingUser);
+            report.setDate(currentDate);
             reportRepository.save(report);
         }
         return report;
@@ -46,7 +51,6 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public Report findReportByUserId(Users user) {
-
         return reportRepository.findReportByUser(user);
     }
 

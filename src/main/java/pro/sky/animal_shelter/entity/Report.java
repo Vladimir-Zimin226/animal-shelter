@@ -1,6 +1,8 @@
 package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -26,7 +28,11 @@ public class Report {
     @Column(name = "behavior_changes", length = 1024)
     private String behaviorChanges;
 
-    // Getters and Setters
+    @Column(name = "create_date")
+    private LocalDate date;
+
+
+// Getters and Setters
 
     public Long getId() {
         return id;
@@ -76,15 +82,24 @@ public class Report {
         this.behaviorChanges = behaviorChanges;
     }
 
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Report report)) return false;
-        return Objects.equals(getId(), report.getId()) && Objects.equals(getUser(), report.getUser()) && Objects.equals(getPhotoOfPet(), report.getPhotoOfPet()) && Objects.equals(getDiet(), report.getDiet()) && Objects.equals(getWellBeing(), report.getWellBeing()) && Objects.equals(getBehaviorChanges(), report.getBehaviorChanges());
+        return Objects.equals(getId(), report.getId()) && Objects.equals(getUser(), report.getUser()) && Objects.equals(getPhotoOfPet(), report.getPhotoOfPet()) && Objects.equals(getDiet(), report.getDiet()) && Objects.equals(getWellBeing(), report.getWellBeing()) && Objects.equals(getBehaviorChanges(), report.getBehaviorChanges()) && Objects.equals(date, report.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getPhotoOfPet(), getDiet(), getWellBeing(), getBehaviorChanges());
+        return Objects.hash(getId(), getUser(), getPhotoOfPet(), getDiet(), getWellBeing(), getBehaviorChanges(), date);
     }
 }
