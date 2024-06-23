@@ -10,5 +10,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Report findReportByUser(Users user);
 
     Report findReportByDate(LocalDate currentDate);
+
+    void deleteAllByUserId(Long userId);
 }
 

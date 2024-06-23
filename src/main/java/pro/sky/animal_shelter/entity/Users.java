@@ -22,7 +22,7 @@ public class Users {
 
     private boolean isVolunteer;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) // One user can have many reports
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Report> reports = new ArrayList<>();
 
     public Users() {
