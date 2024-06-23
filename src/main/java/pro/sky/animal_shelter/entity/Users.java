@@ -1,17 +1,18 @@
 package pro.sky.animal_shelter.entity;
 
-
 import jakarta.persistence.*;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
-@Table(name="users")
+@Table(name = "users")
 public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     private String name;
 
@@ -21,13 +22,11 @@ public class Users {
 
     private boolean isVolunteer;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name="relationships",
-            joinColumns=  @JoinColumn(name="user_id", referencedColumnName="id"),
-            inverseJoinColumns= @JoinColumn(name="dog_id", referencedColumnName="id") )
-    private List<Dogs> dogs = new ArrayList<Dogs>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Report> reports = new ArrayList<>();
 
-    public Users() {}
+    public Users() {
+    }
 
     public Users(Long id, String name, String telegramId, String phoneNumber, boolean isVolunteer) {
         this.id = id;
@@ -41,36 +40,55 @@ public class Users {
         return id;
     }
 
+
     public String getName() {
         return name;
-    }
-
-    public String getTelegramId() {
-        return telegramId;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public boolean isVolunteer() {
-        return isVolunteer;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
+    public String getTelegramId() {
+        return telegramId;
+    }
+
     public void setTelegramId(String telegramId) {
         this.telegramId = telegramId;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
+    public boolean isVolunteer() {
+        return isVolunteer;
+    }
+
     public void setVolunteer(boolean volunteer) {
         isVolunteer = volunteer;
+    }
+
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
+    }
+
+    public void addReport(Report report) {
+        reports.add(report);
+        report.setUser(this);
+    }
+
+    public void removeReport(Report report) {
+        reports.remove(report);
+        report.setUser(null);
     }
 
     @Override
@@ -83,6 +101,6 @@ public class Users {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(id);
     }
 }

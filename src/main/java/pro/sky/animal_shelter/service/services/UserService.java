@@ -1,11 +1,13 @@
 package pro.sky.animal_shelter.service.services;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Service;
 import pro.sky.animal_shelter.entity.Dogs;
 import pro.sky.animal_shelter.entity.Users;
 import pro.sky.animal_shelter.exception.UserNotFoundException;
 
 import java.util.List;
+
 
 public interface UserService {
 
