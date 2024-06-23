@@ -32,8 +32,6 @@ public class Report {
     private LocalDate date;
 
 
-// Getters and Setters
-
     public Long getId() {
         return id;
     }
