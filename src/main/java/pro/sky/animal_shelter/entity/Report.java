@@ -2,6 +2,7 @@ package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -11,13 +12,12 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Many reports can belong to one user
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @Lob
-    @Column(name = "photo_of_pet", nullable = false)
-    private byte[] photoOfPet;
+    @Column(name = "photo")
+    private String photoOfPet;
 
     @Column(name = "diet", length = 1024)
     private String diet;
@@ -28,16 +28,11 @@ public class Report {
     @Column(name = "behavior_changes", length = 1024)
     private String behaviorChanges;
 
-    public Report() {
-    }
+    @Column(name = "create_date")
+    private LocalDate date;
 
-    public Report(Users user, byte[] photoOfPet, String diet, String wellBeing, String behaviorChanges) {
-        this.user = user;
-        this.photoOfPet = photoOfPet;
-        this.diet = diet;
-        this.wellBeing = wellBeing;
-        this.behaviorChanges = behaviorChanges;
-    }
+
+// Getters and Setters
 
     public Long getId() {
         return id;
@@ -55,11 +50,11 @@ public class Report {
         this.user = user;
     }
 
-    public byte[] getPhotoOfPet() {
+    public String getPhotoOfPet() {
         return photoOfPet;
     }
 
-    public void setPhotoOfPet(byte[] photoOfPet) {
+    public void setPhotoOfPet(String photoOfPet) {
         this.photoOfPet = photoOfPet;
     }
 
@@ -87,16 +82,24 @@ public class Report {
         this.behaviorChanges = behaviorChanges;
     }
 
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Report report = (Report) o;
-        return Objects.equals(id, report.id) && Objects.equals(user, report.user);
+        if (!(o instanceof Report report)) return false;
+        return Objects.equals(getId(), report.getId()) && Objects.equals(getUser(), report.getUser()) && Objects.equals(getPhotoOfPet(), report.getPhotoOfPet()) && Objects.equals(getDiet(), report.getDiet()) && Objects.equals(getWellBeing(), report.getWellBeing()) && Objects.equals(getBehaviorChanges(), report.getBehaviorChanges()) && Objects.equals(date, report.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, user);
+        return Objects.hash(getId(), getUser(), getPhotoOfPet(), getDiet(), getWellBeing(), getBehaviorChanges(), date);
     }
 }
