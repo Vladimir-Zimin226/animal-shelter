@@ -64,4 +64,5 @@ public class UserServiceImpl implements UserService {
     public Users findAnyVolunteerFromUsers() {
         return usersRepository.findAnyVolunteerForConsultansy();
     }
+
 }

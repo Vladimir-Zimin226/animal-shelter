@@ -27,6 +27,7 @@ public class Probation {
     /**можно использовать переменную и увеличивать ее на единицу раз в сутки,
      когда переменная равна 30 - испытательный срок окончен, запись удаляем
      */
+    @Column(name = "report_count")
     private int report;
 
     public Probation() {
