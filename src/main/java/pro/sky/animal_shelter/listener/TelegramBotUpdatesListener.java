@@ -68,7 +68,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         telegramBot.setUpdatesListener(this);
     }
 
-    @Scheduled(cron = "0 0 10 * * *")
+    @Scheduled(cron = "0 28 19 * * *")
     public void sendNotifications() {
         List<Users> usersCollection = usersRepository.findAll();
         usersCollection.forEach(userCheck -> {

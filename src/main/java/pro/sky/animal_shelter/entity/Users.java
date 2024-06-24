@@ -22,7 +22,7 @@ public class Users {
 
     private boolean isVolunteer;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private List<Report> reports = new ArrayList<>();
 
     public Users() {
