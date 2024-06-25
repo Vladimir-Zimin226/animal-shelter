@@ -29,14 +29,10 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report createReport(Long userId) {
         Users existingUser = userRepository.findUsersById(userId);
-
-        Report report = reportRepository.findReportByUser(existingUser);
-        if (report == null) {
-            report = new Report();
-            report.setUser(existingUser);
-            report.setDate(currentDate);
-            reportRepository.save(report);
-        }
+        Report report = new Report();
+        report.setUser(existingUser);
+        report.setDate(currentDate);
+        reportRepository.save(report);
         return report;
     }
 
@@ -48,11 +44,11 @@ public class ReportServiceImpl implements ReportService {
         reportRepository.deleteById(reportId);
     }
 
-
     @Override
-    public Report findReportByUserId(Users user) {
-        return reportRepository.findReportByUser(user);
+    public List<Report> findReportsByTelegramId(String telegramId) {
+        return reportRepository.findAllReportsFromUserId(Long.valueOf(telegramId));
     }
+
 
     @Override
     public List<Report> getAllReports() {
