@@ -12,7 +12,6 @@ public class Dogs {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
     private String name;
@@ -39,13 +38,6 @@ public class Dogs {
     private boolean atHome;
 
     private String imgPath;
-
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name="relationships",
-            joinColumns=  @JoinColumn(name="dog_id", referencedColumnName="id"),
-            inverseJoinColumns= @JoinColumn(name="user_id", referencedColumnName="id") )
-    private List<Users> users = new ArrayList<Users>();
-
 
     public Dogs() {
 
