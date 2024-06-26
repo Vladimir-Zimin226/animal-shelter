@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Users findAnyVolunteerFromUsers() {
-        return usersRepository.findAnyVolunteerForConsultansy();
+        return usersRepository.findAnyVolunteerForConsultant();
     }
 
 }
