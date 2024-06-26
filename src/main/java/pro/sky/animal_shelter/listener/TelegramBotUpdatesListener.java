@@ -92,6 +92,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         });
     }
 
+
+    @Scheduled(cron = "0 0 21 * * *")
+    public void seneNotificationToVolunteers() {
+        List<Users> volunteerCollection = usersRepository.findAll();
+        List<Report> reportsCollection = reportRepository.findAllReportsByCurrentDate(currentDate);
+        volunteerCollection.forEach(volunteerCheck -> {
+            if (volunteerCheck.isVolunteer()) {
+                SendMessage message = new SendMessage(volunteerCheck.getTelegramId(), "Уважаемый волонтёр, поступивших сегодня отчётов составляет:  " + reportsCollection);
+                telegramBot.execute(message);
+            } else {
+                System.out.println("В нашей компании нет волонтёров. Добавьте их в бд");
+            }
+        });
+    }
+
     /**
      * Обработка списка обновлений.
      *
