@@ -92,6 +92,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         });
     }
 
+
+    @Scheduled(cron = "0 0 21 * * *")
+    public void seneNotificationToVolunteers() {
+        List<Users> volunteerCollection = usersRepository.findAll();
+        List<Report> reportsCollection = reportRepository.findAllReportsByCurrentDate(currentDate);
+        volunteerCollection.forEach(volunteerCheck -> {
+            if (volunteerCheck.isVolunteer()) {
+                SendMessage message = new SendMessage(volunteerCheck.getTelegramId(), "Уважаемый волонтёр, поступивших сегодня отчётов составляет:  " + reportsCollection);
+                telegramBot.execute(message);
+            } else {
+                System.out.println("В нашей компании нет волонтёров. Добавьте их в бд");
+            }
+        });
+    }
+
     /**
      * Обработка списка обновлений.
      *
@@ -223,6 +238,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 break;
             case "Сохранить фото":
                 initiateReportInfoProcess(chatId);
+                break;
+            case "Правила обращения с кошками":
+                hotToDealWithDemonCat(chatId);
+                break;
+            case "Обустройство дома для кошки":
+                hotTobuildHomeForCat(chatId);
                 break;
             default:
                 handleDefault(chatId, text, telegramId);
@@ -570,6 +591,27 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
+     * Отправка информации с советами по обращению с кошками
+     *
+     * @param chatId Идентификатор чата.
+     */
+    private void hotToDealWithDemonCat(String chatId) {
+        logger.info("Sending cynologist tips to chat {}", chatId);
+        sendMessageWithBackButton(chatId, HOW_TO_DEAL_WITH_CAT, "how_to_take_a_pet", "take_a_pet_menu");
+    }
+
+    /**
+     * Отправка информации с советами по обращению с кошками
+     *
+     * @param chatId Идентификатор чата.
+     */
+    private void hotTobuildHomeForCat(String chatId) {
+        logger.info("Sending cynologist tips to chat {}", chatId);
+        sendMessageWithBackButton(chatId, HOW_TO_BUILD_HOME_FOR_CAT, "how_to_take_a_pet", "take_a_pet_menu");
+    }
+
+
+    /**
      * Отправка реккмоендаций с проверенными кинологами.
      *
      * @param chatId Идентификатор чата.
@@ -901,13 +943,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         KeyboardButton button1 = new KeyboardButton("Правила знакомства с животным до того, как забрать его из приюта");
         KeyboardButton button2 = new KeyboardButton("Список документов для усыновления");
         KeyboardButton button3 = new KeyboardButton("Рекомендации по транспортировке");
-        KeyboardButton button4 = new KeyboardButton("Обустройство дома для щенка");
-        KeyboardButton button5 = new KeyboardButton("Обустройство дома для взрослого животного");
-        KeyboardButton button6 = new KeyboardButton("Обустройство дома для животного с ограниченными возможностями");
-        KeyboardButton button7 = new KeyboardButton("Советы кинолога по первичному общению с собакой");
-        KeyboardButton button8 = new KeyboardButton("Рекомендации по проверенным кинологам");
-        KeyboardButton button9 = new KeyboardButton("Причины отказа в усыновлении");
-        KeyboardButton button10 = new KeyboardButton("Назад");
+        KeyboardButton button4 = new KeyboardButton("Правила обращения с кошками");
+        KeyboardButton button5 = new KeyboardButton("Обустройство дома для кошки");
+        KeyboardButton button6 = new KeyboardButton("Обустройство дома для щенка");
+        KeyboardButton button7 = new KeyboardButton("Обустройство дома для взрослого животного");
+        KeyboardButton button8 = new KeyboardButton("Обустройство дома для животного с ограниченными возможностями");
+        KeyboardButton button9 = new KeyboardButton("Советы кинолога по первичному общению с собакой");
+        KeyboardButton button10 = new KeyboardButton("Рекомендации по проверенным кинологам");
+        KeyboardButton button11 = new KeyboardButton("Причины отказа в усыновлении");
+        KeyboardButton button12 = new KeyboardButton("Назад");
 
         KeyboardButton[][] keyboardButtons = {
                 {button1, button2},
@@ -915,6 +959,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 {button5, button6},
                 {button7, button8},
                 {button9, button10},
+                {button11, button12}
         };
 
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
