@@ -39,13 +39,6 @@ public class Dogs {
 
     private String imgPath;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name="relationships",
-            joinColumns=  @JoinColumn(name="dog_id", referencedColumnName="id"),
-            inverseJoinColumns= @JoinColumn(name="user_id", referencedColumnName="id") )
-    private List<Users> users = new ArrayList<Users>();
-
-
     public Dogs() {
 
     }
