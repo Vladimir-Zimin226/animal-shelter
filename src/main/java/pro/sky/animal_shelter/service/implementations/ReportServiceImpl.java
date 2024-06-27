@@ -46,7 +46,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Report> findReportsByTelegramId(Long telegramId) {
-        return reportRepository.findAllReportsFromUserId(telegramId);
+        return reportRepository.findAllReportsByTelegramId(telegramId);
     }
 
 

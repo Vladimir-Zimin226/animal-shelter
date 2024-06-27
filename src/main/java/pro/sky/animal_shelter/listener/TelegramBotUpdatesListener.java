@@ -132,7 +132,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     handleUpdateForVolunteer(chatId, text);
                 }
             } else if (update.message() != null && update.message().photo() != null) {
-                List<Report> allReports = reportRepository.findAllReportsFromUserId(user.getId());
+                List<Report> allReports = reportRepository.findAllReportsByTelegramId(user.getId());
                 Report newReport = new Report();
                 logger.info("Текущий отчет для пользователя {}: {}", user, newReport);
                 if (allReports.stream().noneMatch(report -> currentDate.equals(report.getDate()))) {
