@@ -1,5 +1,7 @@
 package pro.sky.animal_shelter.listener;
 
+import com.pengrad.telegrambot.model.Chat;
+import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
@@ -71,19 +73,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         List<Users> usersCollection = usersRepository.findAll();
         usersCollection.forEach(userCheck -> {
             if (userCheck.getReports().size() < 31 && !userCheck.isVolunteer()) {
-                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветсвую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
+                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветствую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() == 31) {
-                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользотатель с telegramid: " + userCheck.getTelegramId() + ";\n" +
+                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользователь с telegramId: " + userCheck.getTelegramId() + ";\n" +
                         "По имени: " + userCheck.getName() + ";\n" +
                         "Уже отправил 30 отчётов. Просим проанализировать и принять решение по судьбе питомца.");
                 message.replyMarkup(createKeyboardForPetDecision());
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() > 31 && userCheck.getReports().size() < 45 && !userCheck.isVolunteer()) {
-                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветсвую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
+                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветствую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() == 46) {
-                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользотатель с telegramid: " + userCheck.getTelegramId() + ";\n" +
+                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользователь с telegramId: " + userCheck.getTelegramId() + ";\n" +
                         "По имени: " + userCheck.getName() + ";\n" +
                         "После продления базового количества отчётов (30 штук). Уже отправил 15 отчётов. Просим проанализировать и принять окончательное решение по судьбе питомца.");
                 message.replyMarkup(createKeyboardForPetLastDecision());
@@ -94,7 +96,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
 
     @Scheduled(cron = "0 0 21 * * *")
-    public void seneNotificationToVolunteers() {
+    public void sendNotificationToVolunteers() {
         List<Users> volunteerCollection = usersRepository.findAll();
         List<Report> reportsCollection = reportRepository.findAllReportsByCurrentDate(currentDate);
         volunteerCollection.forEach(volunteerCheck -> {
@@ -117,41 +119,55 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-            String chatId = String.valueOf(update.message().chat().id());
-            String text = update.message().text();
-            String telegramId = String.valueOf(update.message().from().id());
-            Users user = usersRepository.findUserByTelegramId(telegramId);
-            if (update.message() != null && update.message().text() != null) {
-                if (user == null || !user.isVolunteer()) {
-                    try {
-                        handleUpdate(chatId, text, telegramId);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+
+            Message message = update.message();
+            if (message != null) {
+                Chat chat = message.chat();
+                if (chat != null) {
+                    String chatId = String.valueOf(chat.id());
+                    String telegramId = String.valueOf(message.from().id());
+
+                    Users user = usersRepository.findUserByTelegramId(telegramId);
+
+                    if (message.text() != null) {
+                        String text = message.text();
+
+                        if (user == null || !user.isVolunteer()) {
+                            try {
+                                handleUpdate(chatId, text, telegramId);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else if (user.isVolunteer()) {
+                            handleUpdateForVolunteer(chatId, text);
+                        }
+                    } else if (message.photo() != null) {
+                        List<Report> allReports = reportRepository.findAllReportsByUserId(user.getId());
+                        Report newReport = new Report();
+                        logger.info("Текущий отчет для пользователя {}: {}", user, newReport);
+                        if (allReports.stream().noneMatch(report -> currentDate.equals(report.getDate()))) {
+                            logger.info("Создан новый отчет для пользователя {}", user);
+                            newReport.setUser(user);
+                            logger.info("Сохраняем ID пользователя для созданного отчета");
+                            newReport.setDate(currentDate);
+                            logger.info("Добавляем в отчет дату");
+                        }
+                        try {
+                            Path photoPath = uploadPhoto(chatId, update);
+                            if (photoPath != null) {
+                                newReport.setPhotoOfPet(photoPath.toString());
+                                logger.info("Фото получено и добавлено в отчет для пользователя {}", user);
+                                reportRepository.save(newReport);
+                            }
+                        } catch (UploadPhotoException e) {
+                            logger.error("Ошибка при загрузке фото для чата {}: {}", chatId, e.getMessage());
+                        }
                     }
-                } else if (usersRepository.findUserByTelegramId(telegramId).isVolunteer()) {
-                    handleUpdateForVolunteer(chatId, text);
+                } else {
+                    logger.warn("Chat is null for update: {}", update);
                 }
-            } else if (update.message() != null && update.message().photo() != null) {
-                List<Report> allReports = reportRepository.findAllReportsByTelegramId(user.getId());
-                Report newReport = new Report();
-                logger.info("Текущий отчет для пользователя {}: {}", user, newReport);
-                if (allReports.stream().noneMatch(report -> currentDate.equals(report.getDate()))) {
-                    logger.info("Создан новый отчет для пользователя {}", user);
-                    newReport.setUser(user);
-                    logger.info("Сохраняем ID пользователя для созданного отчета");
-                    newReport.setDate(currentDate);
-                    logger.info("Добавляем в отчет дату");
-                }
-                try {
-                    Path photoPath = uploadPhoto(chatId, update);
-                    if (photoPath != null) {
-                        newReport.setPhotoOfPet(photoPath.toString());
-                        logger.info("Фото получено и добавлено в отчет для пользователя {}", user);
-                        reportRepository.save(newReport); // Сохранить отчет, если фото успешно загружено
-                    }
-                } catch (UploadPhotoException e) {
-                    logger.error("Ошибка при загрузке фото для чата {}: {}", chatId, e.getMessage());
-                }
+            } else {
+                logger.warn("Message is null for update: {}", update);
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -172,6 +188,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 break;
             case "/help":
                 sendHelpMessage(chatId);
+                break;
+            case "/menu":
+                sendMiniAppLinkMessage(chatId);
                 break;
             case "Узнать информацию о приюте":
                 sendShelterInfoMenu(chatId);
@@ -254,7 +273,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void handleUpdateForVolunteer(String chatId, String text) {
         switch (text) {
             case "Продлить время проверки хозяина на 15 доп.отчётов":
-                SendMessage message = new SendMessage(chatId, "Тестовый период был продлён на 15 доп. оотчётов");
+                SendMessage message = new SendMessage(chatId, "Тестовый период был продлён на 15 доп. отчётов");
                 telegramBot.execute(message);
                 break;
             case "Отдать питомца насовсем и закрыть тестовый период.":
@@ -274,6 +293,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     private void handlePetGiveAway(String chatId, String text) {
+        ChatStateForContactInfo state = chatStateForContactInfoMap.get(chatId);
+        if (state == null) {
+            logger.error("Chat state for contact info is null for chatId: {}", chatId);
+            return;
+        }
         switch (chatStateForContactInfoMap.get(chatId)) {
             case WAITING_FOR_TELEGRAM_ID_OF_NEW_PET_OWNER:
                 handleNewOwner(chatId, text);
@@ -349,7 +373,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка сообщения с основыми функциями.
+     * Отправка сообщения с основными функциями.
      *
      * @param chatId Идентификатор чата.
      */
@@ -358,6 +382,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         SendMessage message = new SendMessage(chatId, "Я являюсь ботом приюта Счастье В Дом. Нажмите на кнопку ниже, чтобы узнать о нашей компании больше");
         message.replyMarkup(createKeyBoardForStart());
         chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("main_menu", "null"));
+        telegramBot.execute(message);
+    }
+
+    /**
+     * Отправка сообщения со ссылкой на веб-приложение.
+     *
+     * @param chatId Идентификатор чата.
+     */
+    private void sendMiniAppLinkMessage(String chatId) {
+        logger.info("Sending link for opening mini app to chat {}", chatId);
+        SendMessage message = new SendMessage(chatId, MINI_APP_LINK);
+        message.replyMarkup(createKeyBoardForStart());
+        chatStateForBackButtonMap.put(chatId, new ChatStateForBackButton("mini_app_link_menu", "main_menu"));
         telegramBot.execute(message);
     }
 
@@ -395,7 +432,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации о схеме располажения приюта.
+     * Отправка информации о схеме расположения приюта.
      *
      * @param chatId Идентификатор чата.
      */
@@ -508,7 +545,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Создание кнопок с инофрмацием по тому, как можно взять животное из приюта.
+     * Создание кнопок с информацией по тому, как можно взять животное из приюта.
      *
      * @param chatId Идентификатор чата.
      */
@@ -541,7 +578,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с реккомендациями по транспортировке.
+     * Отправка информации с рекомендациями по транспортировке.
      *
      * @param chatId Идентификатор чата.
      */
@@ -561,7 +598,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с реккомендациями по обсутройству дома для взрослой собаки.
+     * Отправка информации с рекомендациями по обустройству дома для взрослой собаки.
      *
      * @param chatId Идентификатор чата.
      */
@@ -581,7 +618,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с советами кинолога по первичному общению с собакойи.
+     * Отправка информации с советами кинолога по первичному общению с собакой.
      *
      * @param chatId Идентификатор чата.
      */
@@ -612,7 +649,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
 
     /**
-     * Отправка реккмоендаций с проверенными кинологами.
+     * Отправка рекомендаций с проверенными кинологами.
      *
      * @param chatId Идентификатор чата.
      */
@@ -1091,7 +1128,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод для обработки фотографии, преобразовании ее в байт-код.
-     * После преобразования, сохраняет фотографию, записывает путь в перменную
+     * После преобразования, сохраняет фотографию, записывает путь в переменную
      *
      * @param chatId Идентификатор чата.
      * @param update Идентификатор пользователя в Telegram.
@@ -1154,6 +1191,4 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
-
-
 }
