@@ -31,8 +31,9 @@ public class Report {
     @Column(name = "create_date")
     private LocalDate date;
 
+    public Report() {
+    }
 
-// Getters and Setters
 
     public Long getId() {
         return id;

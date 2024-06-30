@@ -2,13 +2,11 @@ package pro.sky.animal_shelter.entity;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table (name="dogs")
-public class Dogs {
+@Table(name="cats")
+public class Cats {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,16 +18,16 @@ public class Dogs {
 
     private String breed;
 
-    //Особенности собаки: заболевания, не ладит с другими животными, пристраивается только в частый дом и т.д.
+    //Особенности кошки: заболевания, не ладит с другими животными, пристраивается только в частый дом и т.д.
     private String specifics;
 
     private String history;
 
-    /** Собака может:
+    /** Кошка может:
      *  нуждаться в опекуне, без варианта пристроя
      *  искать и опекуна(до момента пристроя), и хозяина
      *  иметь опекуна в приюте и искать хозяина
-    */
+     */
     private boolean findCurator;
 
     private boolean findOwner;
@@ -39,11 +37,11 @@ public class Dogs {
 
     private String imgPath;
 
-    public Dogs() {
+    public Cats() {
 
     }
 
-    public Dogs(Long id, String name, int age, String breed, String specifics, String history,
+    public Cats(Long id, String name, int age, String breed, String specifics, String history,
                 boolean findCurator, boolean findOwner, boolean atHome, String imgPath) {
         this.id = id;
         this.name = name;
@@ -141,10 +139,9 @@ public class Dogs {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Dogs dogs = (Dogs) o;
-        return Objects.equals(id, dogs.id);
+        Cats cats = (Cats) o;
+        return Objects.equals(id, cats.id);
     }
-
 
     @Override
     public int hashCode() {
