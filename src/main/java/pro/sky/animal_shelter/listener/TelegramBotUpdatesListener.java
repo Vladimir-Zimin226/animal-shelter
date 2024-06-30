@@ -71,19 +71,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         List<Users> usersCollection = usersRepository.findAll();
         usersCollection.forEach(userCheck -> {
             if (userCheck.getReports().size() < 31 && !userCheck.isVolunteer()) {
-                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветсвую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
+                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветствую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() == 31) {
-                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользотатель с telegramid: " + userCheck.getTelegramId() + ";\n" +
+                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользователь с telegramId: " + userCheck.getTelegramId() + ";\n" +
                         "По имени: " + userCheck.getName() + ";\n" +
                         "Уже отправил 30 отчётов. Просим проанализировать и принять решение по судьбе питомца.");
                 message.replyMarkup(createKeyboardForPetDecision());
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() > 31 && userCheck.getReports().size() < 45 && !userCheck.isVolunteer()) {
-                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветсвую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
+                SendMessage message = new SendMessage(userCheck.getTelegramId(), "Приветствую вас, хозяин питомца. Не забудьте сегодня прислать отчёт о питомце. Спасибо!");
                 telegramBot.execute(message);
             } else if (userCheck.getReports().size() == 46) {
-                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользотатель с telegramid: " + userCheck.getTelegramId() + ";\n" +
+                SendMessage message = new SendMessage(usersRepository.findAnyVolunteerForConsultant().getTelegramId(), "Пользователь с telegramId: " + userCheck.getTelegramId() + ";\n" +
                         "По имени: " + userCheck.getName() + ";\n" +
                         "После продления базового количества отчётов (30 штук). Уже отправил 15 отчётов. Просим проанализировать и принять окончательное решение по судьбе питомца.");
                 message.replyMarkup(createKeyboardForPetLastDecision());
@@ -94,7 +94,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
 
     @Scheduled(cron = "0 0 21 * * *")
-    public void seneNotificationToVolunteers() {
+    public void sendNotificationToVolunteers() {
         List<Users> volunteerCollection = usersRepository.findAll();
         List<Report> reportsCollection = reportRepository.findAllReportsByCurrentDate(currentDate);
         volunteerCollection.forEach(volunteerCheck -> {
@@ -254,7 +254,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void handleUpdateForVolunteer(String chatId, String text) {
         switch (text) {
             case "Продлить время проверки хозяина на 15 доп.отчётов":
-                SendMessage message = new SendMessage(chatId, "Тестовый период был продлён на 15 доп. оотчётов");
+                SendMessage message = new SendMessage(chatId, "Тестовый период был продлён на 15 доп. отчётов");
                 telegramBot.execute(message);
                 break;
             case "Отдать питомца насовсем и закрыть тестовый период.":
@@ -349,7 +349,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка сообщения с основыми функциями.
+     * Отправка сообщения с основными функциями.
      *
      * @param chatId Идентификатор чата.
      */
@@ -395,7 +395,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации о схеме располажения приюта.
+     * Отправка информации о схеме расположения приюта.
      *
      * @param chatId Идентификатор чата.
      */
@@ -508,7 +508,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Создание кнопок с инофрмацием по тому, как можно взять животное из приюта.
+     * Создание кнопок с информацией по тому, как можно взять животное из приюта.
      *
      * @param chatId Идентификатор чата.
      */
@@ -541,7 +541,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с реккомендациями по транспортировке.
+     * Отправка информации с рекомендациями по транспортировке.
      *
      * @param chatId Идентификатор чата.
      */
@@ -561,7 +561,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с реккомендациями по обсутройству дома для взрослой собаки.
+     * Отправка информации с рекомендациями по обустройству дома для взрослой собаки.
      *
      * @param chatId Идентификатор чата.
      */
@@ -581,7 +581,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     /**
-     * Отправка информации с советами кинолога по первичному общению с собакойи.
+     * Отправка информации с советами кинолога по первичному общению с собакой.
      *
      * @param chatId Идентификатор чата.
      */
@@ -612,7 +612,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
 
     /**
-     * Отправка реккмоендаций с проверенными кинологами.
+     * Отправка рекомендаций с проверенными кинологами.
      *
      * @param chatId Идентификатор чата.
      */
@@ -1091,7 +1091,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод для обработки фотографии, преобразовании ее в байт-код.
-     * После преобразования, сохраняет фотографию, записывает путь в перменную
+     * После преобразования, сохраняет фотографию, записывает путь в переменную
      *
      * @param chatId Идентификатор чата.
      * @param update Идентификатор пользователя в Telegram.
@@ -1154,6 +1154,4 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
         return new ReplyKeyboardMarkup(keyboardButtons).resizeKeyboard(true).oneTimeKeyboard(true);
     }
-
-
 }
