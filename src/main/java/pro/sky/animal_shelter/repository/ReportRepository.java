@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
-    @Query(value = "SELECT * FROM report_table WHERE user_id.telegramId = :telegramId", nativeQuery = true)
-    List<Report> findAllReportsByTelegramId(@Param("telegramId") Long telegramId);
+    @Query("SELECT r FROM Report r WHERE r.user.id = :userId")
+    List<Report> findAllReportsByUserId(@Param("userId") Long userId);
 
     Report findReportByDate(LocalDate currentDate);
 

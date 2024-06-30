@@ -2,9 +2,11 @@ package pro.sky.animal_shelter.content;
 
 public class TelegramBotContent {
 
-    public static final String WELCOME_MESSAGE = "Добро пожаловать в нашего бота! Введите /help, чтобы узнать, что я могу.";
+    public static final String WELCOME_MESSAGE = "Добро пожаловать в нашего бота! Введите /help, чтобы узнать, что я могу, или введите /menu, чтобы открыть веб-приложение и выбрать животное для усыновления или кураторства";
 
     public static final String WELCOME_PHOTO = "https://keephere.ru/get/xMzDQofmjH8/o/photo.jpg";
+
+    public static final String MINI_APP_LINK = "https://t.me/task_reninder_bot/happiness_in_the_house_shelter";
 
     public static final String HISTORY = "Хаски — сила и скорость, сравниться с которой может только ветер, воплощение духа свободы, воплощение мечты." +
             "Красота ледяных глаз сыграла с ними злую шутку. Глянцевые таблоиды, сверкающие киноленты, ламповые блоги сделали этих собак пленниками минутных желаний человека." +
