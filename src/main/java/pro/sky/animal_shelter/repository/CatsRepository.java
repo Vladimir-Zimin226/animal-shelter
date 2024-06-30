@@ -4,10 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import pro.sky.animal_shelter.entity.Cats;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CatsRepository extends JpaRepository<Cats, Long> {
 
-    Cats findCatsById(long id);
+    Optional<Cats> findById(long id);
 
     List<Cats> findCatsByAtHomeIsTrue();
     List<Cats> findCatsByFindCuratorIsTrue();

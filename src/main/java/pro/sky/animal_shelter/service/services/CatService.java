@@ -5,6 +5,7 @@ import pro.sky.animal_shelter.entity.Cats;
 import pro.sky.animal_shelter.exception.CatNotFoundException;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CatService {
 
@@ -23,7 +24,7 @@ public interface CatService {
      * @return отредактированный объект класса {@link Cats}
      * @throws CatNotFoundException если кошка не была найдена в базе данных
      */
-    Cats updateCat(long id, Cats cat);
+    Optional<Cats> updateCat(long id, Cats cat);
 
     /**
      * Вывод списка всех кошек из приюта из базы данных<br>

@@ -77,8 +77,8 @@ public class ReportController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Report>> getAllReportsFromCurrentUser(Long userId) {
-        return ResponseEntity.ok(reportService.findReportsByTelegramId(userId));
+    public ResponseEntity<List<Report>> getAllReportsFromCurrentUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(reportService.findReportsByUserId(userId));
     }
 
 }

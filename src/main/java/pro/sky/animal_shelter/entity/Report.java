@@ -31,6 +31,9 @@ public class Report {
     @Column(name = "create_date")
     private LocalDate date;
 
+    public Report() {
+    }
+
 
     public Long getId() {
         return id;
