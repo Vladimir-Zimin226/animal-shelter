@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import pro.sky.animal_shelter.entity.Cats;
 import pro.sky.animal_shelter.service.services.CatService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Tag(name = "Контроллер для работы с кошками",
         description = "Создание кошки. " +
@@ -54,11 +56,10 @@ public class CatController {
     )
     @PutMapping("/update/{catId}")
     public ResponseEntity<Cats> editCat(@PathVariable long catId, @RequestBody Cats cat) {
-        Cats updatedCat = catService.updateCat(catId, cat);
-        if (updatedCat == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(updatedCat);
+        Optional<Cats> optionalUpdatedCat = catService.updateCat(catId, cat);
+
+        return optionalUpdatedCat.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+
     }
 
     @Operation(summary = "Получаем всех кошек из базы данных",

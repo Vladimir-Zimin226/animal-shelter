@@ -12,6 +12,7 @@ import pro.sky.animal_shelter.service.implementations.CatServiceImpl;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,12 +46,15 @@ public class CatControllerWebMvcTest {
     @Test
     public void testUpdateCat() throws Exception {
         Cats testCat = new Cats();
-        given(catService.updateCat(anyLong(), any(Cats.class))).willReturn(testCat);
+        testCat.setName("Test Cat");
+
+        given(catService.updateCat(anyLong(), any(Cats.class))).willReturn(Optional.of(testCat));
 
         mockMvc.perform(put("/cats/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(testCat)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Test Cat"));
     }
 
     @Test
