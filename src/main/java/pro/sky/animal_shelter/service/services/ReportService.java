@@ -12,7 +12,7 @@ public interface ReportService {
 
     void deleteReport(Long reportId);
 
-    List<Report> findReportsByUserId(Long userId);
+    List<Report> findReportsByTelegramId(Long telegramId);
 
     List<Report> getAllReports();
 }
