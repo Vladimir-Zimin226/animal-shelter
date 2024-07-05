@@ -12,6 +12,7 @@ import pro.sky.animal_shelter.repository.CatsRepository;
 import pro.sky.animal_shelter.service.implementations.CatServiceImpl;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -62,13 +63,16 @@ public class CatServiceTest {
     @DisplayName("Обновление котика по ID")
     public void updateCat_ShouldUpdateCat() {
         long id = 2L;
-
         Cats updatedCat = murca;
+        Cats existingCat = vaska;
 
-        when(catsRepository.findCatsById(id)).thenReturn(vaska);
+        when(catsRepository.findById(id)).thenReturn(Optional.of(existingCat));
+        when(catsRepository.save(any(Cats.class))).thenReturn(updatedCat);
 
-        when(catsRepository.save(any(Cats.class))).thenReturn(murca);
-        Cats result = catService.updateCat(id, murca);
+        Optional<Cats> resultOptional = catService.updateCat(id, murca);
+
+        assertTrue(resultOptional.isPresent());
+        Cats result = resultOptional.get();
 
         assertEquals(updatedCat, result);
     }
@@ -76,8 +80,7 @@ public class CatServiceTest {
     @Test
     @DisplayName("Проверка вызова ошибки при обновлении котика")
     void updateCat_NonExistentCat_ShouldThrowException() {
-
-        when(catsRepository.findCatsById(1L)).thenReturn(null);
+        when(catsRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(CatNotFoundException.class, () -> {
             catService.updateCat(1L, vaska);

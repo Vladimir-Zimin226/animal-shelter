@@ -5,7 +5,6 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
-import org.hibernate.mapping.Collection;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,8 +14,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.util.ReflectionTestUtils;
 import pro.sky.animal_shelter.chatStates.ChatStateForBackButton;
 import pro.sky.animal_shelter.chatStates.ChatStateForContactInfo;
@@ -53,7 +50,7 @@ public class TelegramBotUpdatesListenerTest {
      */
 
     @Test
-    public void sendWelcomeMessageest() {
+    public void sendWelcomeMessageTest() {
         Update update = BotUtils.fromJson(
                 """
                         {
@@ -381,7 +378,7 @@ public class TelegramBotUpdatesListenerTest {
         chatStateForContactInfoMap.put("123",ChatStateForContactInfo.DROP);
         Users volunteer = new Users();
         volunteer.setVolunteer(true);
-        volunteer.setTelegramId("@volonter");
+        volunteer.setTelegramId("@volunteer");
         Update update = BotUtils.fromJson(
                 """
                         {
@@ -407,7 +404,7 @@ public class TelegramBotUpdatesListenerTest {
         String chatId = (String) message.getParameters().get("chat_id");
         String text = (String) message.getParameters().get("text");
 
-        Assertions.assertEquals("@volonter", chatId);
+        Assertions.assertEquals("@volunteer", chatId);
         Assertions.assertEquals("Просьба о волонтёрской помощи по номеру: +71234567890 telegram ID: 123", text);
         Assertions.assertEquals(chatStateForContactInfoMap.get("123"), ChatStateForContactInfo.NONE);
 
@@ -1109,7 +1106,7 @@ public class TelegramBotUpdatesListenerTest {
     public void processPhoneNumberTest() {
         chatStateForContactInfoMap.put("123",ChatStateForContactInfo.WAITING_FOR_PHONE_NUMBER);
         Users user = new Users();
-        user.setName("Jhon");
+        user.setName("John");
         userContactMap.put("123",user);
         Update update = BotUtils.fromJson(
                 """
@@ -1185,7 +1182,7 @@ public class TelegramBotUpdatesListenerTest {
     }
 
     /**
-     * Проверяем, правильно ли отработает бот. если на вопрос корректности ввода имени пользователь ответил "нет"
+     * Проверяем, правильно ли отработает бот. Если на вопрос корректности ввода имени пользователь ответил "нет"
      */
 
     @Test
@@ -1226,7 +1223,7 @@ public class TelegramBotUpdatesListenerTest {
     }
 
     /**
-     * Проверяем - правильно ли отработает бот при утвердительном  ответе пользователя на запрос корректности введенного имени.
+     * Проверяем - правильно ли отработает бот при утвердительном ответе пользователя на запрос корректности введенного имени.
      * Запускается ли метод saveUserContactInfo при ответе - да.
      */
 

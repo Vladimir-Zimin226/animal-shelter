@@ -7,6 +7,7 @@ import pro.sky.animal_shelter.repository.CatsRepository;
 import pro.sky.animal_shelter.service.services.CatService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CatServiceImpl implements CatService {
@@ -26,11 +27,14 @@ public class CatServiceImpl implements CatService {
     }
 
     @Override
-    public Cats updateCat(long id, Cats cat) {
-        Cats updatedCat = catsRepository.findCatsById(id);
-        if (updatedCat == null) {
+    public Optional<Cats> updateCat(long id, Cats cat) {
+        Optional<Cats> optionalUpdatedCat = catsRepository.findById(id);
+
+        if (optionalUpdatedCat.isEmpty()) {
             throw new CatNotFoundException();
         }
+
+        Cats updatedCat = optionalUpdatedCat.get();
         updatedCat.setName(cat.getName());
         updatedCat.setBreed(cat.getBreed());
         updatedCat.setAge(cat.getAge());
@@ -38,8 +42,9 @@ public class CatServiceImpl implements CatService {
         updatedCat.setFindOwner(cat.isFindOwner());
         updatedCat.setHistory(cat.getHistory());
         updatedCat.setAtHome(cat.isAtHome());
-        cat.setImgPath(updatedCat.getImgPath());
-        return catsRepository.save(updatedCat);
+        updatedCat.setImgPath(cat.getImgPath());  // Здесь я изменил, чтобы вызвался метод setImgPath из переданного объекта "cat"
+
+        return Optional.of(catsRepository.save(updatedCat));
     }
 
     @Override
