@@ -17,6 +17,12 @@ The shelter management asked us for help: they asked us to write a Telegram bot 
 
 The shelter volunteers also asked the new owners to send a daily report on how the animal is adapting to the new environment. The customer also asked the bot to do this part of the work.
 
+## To start the project:
+1. Copy the project to your local server
+2. Working code in the Main branch
+3. Add to application.properties the path to the PostgresQL database, the user and password for connection, as well as the bot token of your Telegram bot
+4. Run the application
+
 ## Overview of how the application works
 
 https://youtu.be/wayd2NTiJS4
